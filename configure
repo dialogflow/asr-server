@@ -1,0 +1,127 @@
+#!/bin/bash
+#
+# This configure script is hand-generated, not auto-generated.
+# It creates the file kaldi.mk, which is %included by the Makefiles
+# in the subdirectories.
+# The file kaldi.mk is editable by hand-- for example, you may want to
+# remove the options -g -O0 -DKALDI_PARANOID, or edit the
+# -DKALDI_DOUBLE_PRECISION option (to be 1 not 0),
+
+
+#  Example command lines:
+# ./configure
+# ./configure --shared  ## shared libraries.
+# ./configure --mkl-root=/opt/intel/mkl
+# ./configure --mkl-root=/opt/intel/mkl --threaded-math=yes
+# ./configure --mkl-root=/opt/intel/mkl --threaded-math=yes --mkl-threading=tbb
+#        This is for MKL 11.3 -- which does not seem  to provide Intel OMP libs
+# ./configure  --openblas-root=../tools/OpenBLAS/install  # before doing
+#        # this, cd to ../tools and type "make openblas".  Note:
+#        # this is not working correctly on all platforms, do "make test"
+#        # and look out for segmentation faults.
+# ./configure --atlas-root=../tools/ATLAS/build
+
+#This should be incremented after every significant change of the configure script
+#I.e. after each change that affects the kaldi.mk or the build system as whole
+CONFIGURE_VERSION=1
+OUTPUT_MK=sti.mk
+
+function rel2abs {
+  if [ ! -z "$1" ]; then
+    local retval=$(readlink -f $1)
+    echo $retval
+  fi
+}
+
+function read_dirname {
+  local dir_name=`expr "X$1" : '[^=]*=\(.*\)'`;
+  local retval=`rel2abs $dir_name`
+  [ -z $retval ] && echo "Bad option '$1': no such directory: $dir_name" >&2 && exit 1;
+  echo $retval
+}
+
+function is_set {
+  local myvar=${1:-notset}
+  if [ "$myvar" == "notset" ]; then
+    return 1
+  else
+    return 0
+  fi
+}
+
+##   First do some checks.  These verify that all the things are
+##   here that should be here.
+if ! [ -x "$PWD/configure" ]; then
+  echo 'You must run "configure" from the src/ directory.'
+  exit 1
+fi
+
+## Default locations for Kaldi sources.
+KALDIROOT=$(readlink -f ../kaldi-apiai)
+
+function usage {
+  echo 'Usage: ./configure [--kaldi-root=KALDIROOT]';
+}
+
+cmd_line="$0 $@"  # Save the command line to include in kaldi.mk
+
+while [ $# -gt 0 ];
+do
+  case "$1" in
+  --help)
+    usage; exit 0 ;;
+  --version)
+    echo $CONFIGURE_VERSION; exit 0 ;;
+  --kaldi-root=*)
+    KALDIROOT=$(read_dirname $1);
+    shift ;;
+  *)  echo "Unknown argument: $1, exiting"; usage; exit 1 ;;
+  esac
+done
+
+function failure {
+  echo "***configure failed: $* ***" >&2
+  if [ -f kaldi.mk ]; then rm kaldi.mk; fi
+  exit 1;
+}
+
+function check_exists {
+  if [ ! -f $1 ]; then failure "$1 not found."; fi
+}
+
+function exit_success {
+  echo "SUCCESS"
+  exit 0;
+}
+
+function check_sys_library {
+	echo -n "Looking for $1 library: "
+	local response=$(whereis lib$1)
+	local libpath=${response##*:}
+	if [ -z "$libpath" ]; then
+		echo "Not found"
+		failure "Library $1 not found"
+	else
+		echo $libpath
+	fi
+}
+
+echo "Configuring ..."
+
+echo "Looking for Kaldi sources in \"$KALDIROOT\"..."
+check_exists "$KALDIROOT/src/kaldi.mk"
+
+check_sys_library fcgi
+check_sys_library fcgi++
+
+# back up the old one in case we modified it
+if [ -f "$OUTPUT_MK" ]; then
+  echo "Backing up $OUTPUT_MK to $OUTPUT_MK.bak"
+  cp $OUTPUT_MK ${OUTPUT_MK}.bak
+fi
+
+printf "# This file was generated using the following command:\n# $cmd_line\n\n" > $OUTPUT_MK
+
+printf "KALDI_PATH = $KALDIROOT/src" >> $OUTPUT_MK
+
+exit_success
