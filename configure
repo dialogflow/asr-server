@@ -24,7 +24,10 @@
 #This should be incremented after every significant change of the configure script
 #I.e. after each change that affects the kaldi.mk or the build system as whole
 CONFIGURE_VERSION=1
-OUTPUT_MK=sti.mk
+OUTPUT_MK=apiai.mk
+INCLUDE_PATHS="/usr/include /usr/local/include"
+
+APIAI_CXX_FLAGS=
 
 function rel2abs {
   if [ ! -z "$1" ]; then
@@ -106,6 +109,22 @@ function check_sys_library {
 	fi
 }
 
+function check_header_file {
+	for file in $1; do
+		for path in $INCLUDE_PATHS; do
+			local result="${path}/${file}"
+			echo -n "Checking ${result}..." >&2
+			if [ -f "$result" ]; then
+				echo "OK" >&2
+				echo $result
+				break 2
+			else
+				echo "Not found" >&2
+			fi
+		done
+	done
+}
+
 echo "Configuring ..."
 
 echo "Looking for Kaldi sources in \"$KALDIROOT\"..."
@@ -113,6 +132,16 @@ check_exists "$KALDIROOT/src/kaldi.mk"
 
 check_sys_library fcgi
 check_sys_library fcgi++
+
+FCGIO_H=$(check_header_file "fcgio.h")
+if [ -z "$FCGIO_H" ]; then
+	FCGIO_H=$(check_header_file "fastcgi/fcgio.h")
+	if [ -z "$FCGIO_H" ]; then
+		failure "fcgio.h not found"
+	else
+		APIAI_CXX_FLAGS="$APIAI_CXX_FLAGS -I$(dirname $FCGIO_H)"
+	fi
+fi
 
 # back up the old one in case we modified it
 if [ -f "$OUTPUT_MK" ]; then
@@ -122,6 +151,7 @@ fi
 
 printf "# This file was generated using the following command:\n# $cmd_line\n\n" > $OUTPUT_MK
 
-printf "KALDI_PATH = $KALDIROOT/src" >> $OUTPUT_MK
+printf "KALDI_PATH = $KALDIROOT/src\n" >> $OUTPUT_MK
+printf "APIAI_CXX_FLAGS = $APIAI_CXX_FLAGS\n" >> $OUTPUT_MK
 
 exit_success

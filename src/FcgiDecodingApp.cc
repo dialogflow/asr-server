@@ -17,7 +17,7 @@
 #include "ResponseJsonWriter.h"
 #include "FcgiDecodingApp.h"
 #include "QueryStringParser.h"
-#include <fastcgi/fcgio.h>
+#include <fcgio.h>
 #include <vector>
 #include <string>
 #include <stdlib.h>

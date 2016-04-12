@@ -1,11 +1,11 @@
 
 all:
 
-include ../sti.mk
+include ../apiai.mk
 include $(KALDI_PATH)/kaldi.mk
 
 LDLIBS += -lfcgi -lfcgi++
-EXTRA_CXXFLAGS += -I$(KALDI_PATH) -L$(KALDI_PATH) -Og
+EXTRA_CXXFLAGS += -I$(KALDI_PATH) -L$(KALDI_PATH) $(APIAI_CXX_FLAGS)
 
 OBJFILES = Timing.o RequestRawReader.o ResponseJsonWriter.o OnlineDecoder.o Nnet3LatgenFasterDecoder.o QueryStringParser.o FcgiDecodingApp.o 
 
