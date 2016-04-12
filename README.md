@@ -93,18 +93,20 @@ Getting a recognition model
 ------------------------
 
 When application build complete you need to download language specific 
-data.
+data. 
 
 Return to your working directory where you put Kaldi sources
 
 	$ cd ~/apiai
 
-Currently it is only English model available
-at <https://api.ai/downloads/api.ai-kaldi-asr-model.zip>.
+Builded ASR application uses a Kaldi nnet3 models, which you can get
+by training a neural network with your personal data set or use a 
+pretrained network provided by us. Currently it is only English model available
+at <https://api.ai/downloads/api.ai-kaldi-asr-model.zip>. 
 
 	$ wget https://api.ai/downloads/api.ai-kaldi-asr-model.zip
 
-Unzip the archive to asr-server directory.
+Unzip the archive to `asr-server` directory.
 
 	$ unzip api.ai-kaldi-asr-model.zip
 
@@ -131,6 +133,20 @@ As an alternative way you may use special spawn-fcgi utility:
 
 Configuring HTTP service
 ---------------------
+
+You may use any web-server which have FastCGI support: Apache, Nginx, Lighttpd etc. 
+
+### Installing Nginx
+
+You can download latest sources from official website <http://nginx.org/> and build Nginx with yourself or use your system package manager.
+
+openSuSE:
+
+	$ sudo zypper install nginx
+
+Debian and Ubuntu:
+
+	$ sudo apt-get install nginx
 
 ### Configuring nginx
 
@@ -179,5 +195,8 @@ You may specify some decoding parameters in request query string,
 e.g. to change the number of possible recognition results set 
 `nbest` parameter:
 
-	$ curl -H "Content-Type: application/octet-stream" --data-binary @audio.raw http://localhost/asr?nbest=3
+	$ curl -H "Content-Type: application/octet-stream" --data-binary @audio.raw http://localhost/asr?nbest=2
 
+to get something similar to folowing:
+
+	{"status":"ok","data":\[{"confidence":0.900359,"text":"HELLO WORLD"},{"confidence":0.89012,"text":"HELLO WORD"}\]}
