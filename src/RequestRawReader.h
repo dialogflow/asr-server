@@ -48,7 +48,7 @@ public:
 		intermediateMillisecondsInterval_ = 0;
 	}
 
-	~RequestRawReader() {
+	virtual ~RequestRawReader() {
 		delete current_chunk_;
 	}
 
@@ -57,7 +57,7 @@ public:
 	/** Get errors flag */
 	bool HasErrors(void) { return fail_ || is_->fail(); }
 	/** Get last error message */
-	std::string LastErrorMessage(void) { return last_error_message_; }
+	const std::string &LastErrorMessage(void) { return last_error_message_; }
 
 	virtual kaldi::int32 BestCount(void) { return bestCount_; }
 	virtual kaldi::int32 IntermediateIntervalMillisec(void) { return intermediateMillisecondsInterval_; }

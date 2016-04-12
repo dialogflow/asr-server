@@ -24,19 +24,19 @@ namespace apiai {
 class Nnet3LatgenFasterDecoder: public OnlineDecoder {
 public:
 	Nnet3LatgenFasterDecoder();
-	~Nnet3LatgenFasterDecoder();
+	virtual ~Nnet3LatgenFasterDecoder();
 
-	void RegisterOptions(kaldi::OptionsItf &po);
-	bool Initialize(kaldi::OptionsItf &po);
+	virtual void RegisterOptions(kaldi::OptionsItf &po);
+	virtual bool Initialize(kaldi::OptionsItf &po);
 protected:
-	bool AcceptWaveform(kaldi::BaseFloat sampling_rate,
+	virtual bool AcceptWaveform(kaldi::BaseFloat sampling_rate,
 			const kaldi::VectorBase<kaldi::BaseFloat> &waveform);
-	void InputStarted();
-	void InputFinished();
-	void GetLattice(kaldi::CompactLattice *clat);
-	void CleanUp();
+	virtual void InputStarted();
+	virtual void InputFinished();
+	virtual void GetLattice(kaldi::CompactLattice *clat);
+	virtual void CleanUp();
 
-	int32 DecodeIntermediate(int bestCount, vector<DecodedData> *result);
+	virtual int32 DecodeIntermediate(int bestCount, vector<DecodedData> *result);
 private:
 	std::string nnet3_rxfilename_;
 

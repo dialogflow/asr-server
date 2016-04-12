@@ -33,14 +33,11 @@ namespace apiai {
 class OnlineDecoder : public Decoder {
 public:
 	OnlineDecoder();
-	~OnlineDecoder();
+	virtual ~OnlineDecoder();
 
-//	kaldi::BaseFloat ChunkLengthSeconds() { return chunk_length_secs_; }
-//	fst::SymbolTable *WordSyms() { return word_syms_; };
-
-	void RegisterOptions(kaldi::OptionsItf &po);
+	virtual void RegisterOptions(kaldi::OptionsItf &po);
 	virtual bool Initialize(kaldi::OptionsItf &po);
-	void Decode(Request &request, Response &response);
+	virtual void Decode(Request &request, Response &response);
 protected:
 	struct DecodedData;
 
@@ -76,7 +73,7 @@ protected:
 	kaldi::BaseFloat lm_scale_;
 	/**
 	 * Max length of record in seconds to be recognised.
-     * All records longer than given value will be truncated. Note: Non-positive value to deactivate.
+	 * All records longer than given value will be truncated. Note: Non-positive value to deactivate.
 	 */
 	kaldi::BaseFloat max_record_size_seconds_;
 	/**

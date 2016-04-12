@@ -26,6 +26,8 @@ namespace apiai {
  */
 class Request {
 public:
+	virtual ~Request() {};
+
 	/** Get number of samples per second of audio data */
 	virtual kaldi::int32 Frequency(void) = 0;
 

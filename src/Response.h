@@ -40,6 +40,8 @@ struct RecognitionResult {
  */
 class Response {
 public:
+	virtual ~Response() {};
+
 	/** Set final results */
 	virtual void SetResult(std::vector<RecognitionResult> &data) = 0;
 	/** Set final result.
