@@ -4,7 +4,8 @@ all:
 include ../apiai.mk
 include $(KALDI_PATH)/kaldi.mk
 
-LDLIBS += -lfcgi -lfcgi++
+LDFLAGS += $(CUDA_LDFLAGS)
+LDLIBS += -lfcgi -lfcgi++ $(CUDA_LDLIBS)
 EXTRA_CXXFLAGS += -I$(KALDI_PATH) -L$(KALDI_PATH) $(APIAI_CXX_FLAGS)
 
 OBJFILES = Timing.o RequestRawReader.o ResponseJsonWriter.o OnlineDecoder.o Nnet3LatgenFasterDecoder.o QueryStringParser.o FcgiDecodingApp.o 
