@@ -36,7 +36,6 @@ branch please use our branched off version available at
 
 This command will clone source tree to kaldi-apiai directory. 
 To configure and build Kaldi please refer to its official instruction:
-
 <http://kaldi.sourceforge.net/install.html>
 
 ### Installing libraries
@@ -46,7 +45,7 @@ system packet manager.
 
 In openSuSE you may run:
 
-	$ sudo zypper install FastCGI
+	$ sudo zypper install FastCGI-devel
 
 It you have Debian or Ubuntu:
 	
@@ -79,7 +78,7 @@ by running a special utility:
 
 It will check that all required libraries installed to your system and 
 also will look for Kaldi libraries in ../kaldi-apiai folder. If you 
-have the Kaldi installed somewhere else you may explicitly pass the 
+have Kaldi installed somewhere else you may explicitly pass the 
 path via --kaldi-root option:
 
 	$ ./configure --kaldi-root=<path_to_kaldi>
@@ -136,9 +135,39 @@ Configuring HTTP service
 
 You may use any web-server which have FastCGI support: Apache, Nginx, Lighttpd etc. 
 
+### Installing Apache2
+
+openSuSE:
+
+	$ sudo zypper in apache2
+	
+Debian and Ubuntu:
+
+	$ sudo apt-get install apache2
+	
+### Configuring Apache2
+
+Enable FastCGI proxy module with `a2enmod`:
+	
+	$ sudo a2enmod proxy_fcgi
+	
+Then you have to add to Apache2 configuration file following line:
+
+	ProxyPass "/asr" "fcgi://localhost:8000/"
+	
+If your Apache configured to include all .conf files from /etc/apache2/conf.d folder you may 
+create separate asr_proxy.conf file with the given line:
+	
+	$ sudo echo 'ProxyPass "/asr" "fcgi://localhost:8000/"' > /etc/apache2/conf.d/asr_proxy.conf
+	
+Now restart Apache:
+	
+	$ sudo /etc/init.d/apache2 restart
+
 ### Installing Nginx
 
-You can download latest sources from official website <http://nginx.org/> and build Nginx with yourself or use your system package manager.
+You can download latest sources from official website <http://nginx.org/> and build Nginx 
+with yourself or use your system package manager.
 
 openSuSE:
 
@@ -148,7 +177,7 @@ Debian and Ubuntu:
 
 	$ sudo apt-get install nginx
 
-### Configuring nginx
+### Configuring Nginx
 
 Open nginx.conf and write down the following code:
 
@@ -185,11 +214,16 @@ utility:
 
 On successfull recognition the command will return something like this:
 
-	{"status":"ok","data":\[{"confidence":0.900359,"text":"HELLO WORLD"}\]}
+	{
+		"status":"ok",
+		"data":[
+			{"confidence":0.900359,"text":"HELLO WORLD"}
+		]
+	}
 
 On error the return value will be like this:
 
-	{"status":"error","data":\[{"text":"Failed to decode"}\]}
+	{"status":"error","data":[{"text":"Failed to decode"}]}
 
 You may specify some decoding parameters in request query string, 
 e.g. to change the number of possible recognition results set 
@@ -199,4 +233,10 @@ e.g. to change the number of possible recognition results set
 
 to get something similar to folowing:
 
-	{"status":"ok","data":\[{"confidence":0.900359,"text":"HELLO WORLD"},{"confidence":0.89012,"text":"HELLO WORD"}\]}
+	{
+		"status":"ok",
+		"data":[
+			{"confidence":0.900359,"text":"HELLO WORLD"},
+			{"confidence":0.89012,"text":"HELLO WORD"}
+		]
+	}
