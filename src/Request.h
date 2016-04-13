@@ -29,13 +29,13 @@ public:
 	virtual ~Request() {};
 
 	/** Get number of samples per second of audio data */
-	virtual kaldi::int32 Frequency(void) = 0;
+	virtual kaldi::int32 Frequency(void) const = 0;
 
 	/** Get max number of expected result variants */
-	virtual kaldi::int32 BestCount(void) = 0;
+	virtual kaldi::int32 BestCount(void) const = 0;
 	/** Get milliseconds interval between intermediate results.
 	 *  If non-positive given then no intermediate results would be calculated */
-	virtual kaldi::int32 IntermediateIntervalMillisec(void) = 0;
+	virtual kaldi::int32 IntermediateIntervalMillisec(void) const = 0;
 
 	/**
 	 * Get next chunk of audio data samples.

@@ -33,7 +33,7 @@ public:
 	virtual ~QueryStringParser();
 
 	/** Returns true if there is more unhandled name-value pairs */
-	bool HasNext() { return has_next_; }
+	bool HasNext() const { return has_next_; }
 	/**
 	 * Get next name-value pair.
 	 * Returns false if there is no more pairs

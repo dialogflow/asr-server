@@ -52,15 +52,15 @@ public:
 		delete current_chunk_;
 	}
 
-	virtual kaldi::int32 Frequency(void) { return frequency_; }
+	virtual kaldi::int32 Frequency(void) const { return frequency_; }
 
 	/** Get errors flag */
 	bool HasErrors(void) { return fail_ || is_->fail(); }
 	/** Get last error message */
-	const std::string &LastErrorMessage(void) { return last_error_message_; }
+	const std::string &LastErrorMessage(void) const { return last_error_message_; }
 
-	virtual kaldi::int32 BestCount(void) { return bestCount_; }
-	virtual kaldi::int32 IntermediateIntervalMillisec(void) { return intermediateMillisecondsInterval_; }
+	virtual kaldi::int32 BestCount(void) const { return bestCount_; }
+	virtual kaldi::int32 IntermediateIntervalMillisec(void) const { return intermediateMillisecondsInterval_; }
 
 	/** Set number of suggested recognition result variants */
 	void BestCount(kaldi::int32 value) { bestCount_ = std::max(NBEST_MIN, std::min(NBEST_MAX, value)); }
