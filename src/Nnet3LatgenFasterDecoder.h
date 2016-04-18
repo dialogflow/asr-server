@@ -26,6 +26,7 @@ public:
 	Nnet3LatgenFasterDecoder();
 	virtual ~Nnet3LatgenFasterDecoder();
 
+	virtual Nnet3LatgenFasterDecoder *Clone() const;
 	virtual void RegisterOptions(kaldi::OptionsItf &po);
 	virtual bool Initialize(kaldi::OptionsItf &po);
 protected:

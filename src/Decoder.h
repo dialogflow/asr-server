@@ -29,6 +29,8 @@ class Decoder {
 public:
 	virtual ~Decoder() {};
 
+	/** Create decoder clone */
+	virtual Decoder *Clone() const = 0;
 	/** Register options which can be defined via command line arguments */
 	virtual void RegisterOptions(kaldi::OptionsItf &po) = 0;
 	/** Initialize decoder */

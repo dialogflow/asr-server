@@ -29,7 +29,8 @@ namespace apiai {
 class FcgiDecodingApp {
 public:
 	/** Initialize with given decoder */
-	FcgiDecodingApp(Decoder &decoder) : decoder_(decoder), fcgi_socket_backlog_(0), socket_id_(-1) {};
+	FcgiDecodingApp(Decoder &decoder) : decoder_(decoder),
+		fcgi_threads_number_(1), fcgi_socket_backlog_(0), socket_id_(-1) {};
 
 	/** Get run specifications and allowed arguments list */
 	std::string &Usage() { return usage_; }
@@ -40,11 +41,13 @@ public:
 	int Run(int argn, char **argv);
 private:
 	void RegisterOptions(kaldi::OptionsItf &po);
-	void ProcessingRoutine();
+	void ProcessingRoutine(Decoder &decoder);
+	static void *RunChildThread(void *app);
 
 	Decoder &decoder_;
 	std::string usage_;
 
+	int fcgi_threads_number_;
 	std::string fcgi_socket_path_;
 	int fcgi_socket_backlog_;
 	int socket_id_;

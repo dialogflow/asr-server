@@ -33,6 +33,10 @@ Nnet3LatgenFasterDecoder::~Nnet3LatgenFasterDecoder() {
 	delete feature_info_;
 }
 
+Nnet3LatgenFasterDecoder *Nnet3LatgenFasterDecoder::Clone() const {
+	return new Nnet3LatgenFasterDecoder(*this);
+}
+
 void Nnet3LatgenFasterDecoder::RegisterOptions(kaldi::OptionsItf &po) {
 	OnlineDecoder::RegisterOptions(po);
 
