@@ -156,9 +156,15 @@ Then you have to add to Apache2 configuration file following line:
 	ProxyPass "/asr" "fcgi://localhost:8000/"
 	
 If your Apache configured to include all .conf files from /etc/apache2/conf.d folder you may 
-create separate asr_proxy.conf file with the given line:
-	
-	$ sudo echo 'ProxyPass "/asr" "fcgi://localhost:8000/"' > /etc/apache2/conf.d/asr_proxy.conf
+create separate asr_proxy.conf file with following content:
+
+	ProxyPass "/asr" "fcgi://localhost:8000/"
+	Alias /asr-html/ "/home/username/apiai/asr-server/asr-html/"
+	<Directory "/home/username/apiai/asr-server/asr-html">
+		Options Indexes MultiViews
+		AllowOverride None
+		Require all granted
+	</Directory>
 	
 Now restart Apache:
 	
@@ -191,6 +197,11 @@ Open nginx.conf and write down the following code:
 				fastcgi_request_buffering off;
 				Include      fastcgi_params;
 			}
+
+			location /asr-html {
+				root /home/username/apiai/asr-server/;
+				index index.html;
+			}
 		}
 	}
 
@@ -199,13 +210,24 @@ to ASR service listening 8000 port via FastCGI gate. For detailed
 information please please refer to nginx documentation 
 (e.g. <https://www.nginx.com/resources/wiki/start/topics/examples/fastcgiexample/>)
 
-Recognizing Speech
+Speech Recognition
 ----------------
 
 Server accepts raw mono 16-bits 16 KHz PCM data. You can convert your audio 
 using any popular encoding utilities, for instance, you can use ffmpeg:
 
 	$ ffmpeg -i audio.wav -f s16le -ar 16000 -ac 1 audio.raw
+
+### Recognition using web browser
+
+There is a simple JS implementation that allows you to recognize speech using system mic.
+Open in your browser:
+
+	http://localhost/asr-html/
+
+and follow the instructions on the page.
+
+### Recognition from command line using curl
 
 Now, let’s recognize `audio.raw` by calling web-service with `curl` 
 utility:
