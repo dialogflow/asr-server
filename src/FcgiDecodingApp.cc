@@ -93,10 +93,11 @@ void FcgiDecodingApp::ProcessingRoutine(Decoder &decoder) {
 
 int FcgiDecodingApp::Run(int argc, char **argv) {
 
-	if (socket_id_ >= 0) {
-		KALDI_WARN << "Socket already opened";
+	if (running_) {
+		KALDI_WARN << "Application already running";
 		return 1;
 	}
+	running_ = true;
 
 	// Predefined configuration args
 	const char *extra_args[] = {
@@ -139,6 +140,7 @@ int FcgiDecodingApp::Run(int argc, char **argv) {
 
 	if (!decoder_.Initialize(po)) {
 		po.PrintUsage();
+		running_ = false;
 	    return 1;
 	}
 
@@ -172,6 +174,7 @@ int FcgiDecodingApp::Run(int argc, char **argv) {
 		}
 	}
 
+	running_ = false;
 	return 0;
 }
 } /* namespace apiai */

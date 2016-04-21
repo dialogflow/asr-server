@@ -30,7 +30,8 @@ class FcgiDecodingApp {
 public:
 	/** Initialize with given decoder */
 	FcgiDecodingApp(Decoder &decoder) : decoder_(decoder),
-		fcgi_threads_number_(1), fcgi_socket_backlog_(0), socket_id_(-1) {};
+		fcgi_threads_number_(1), fcgi_socket_backlog_(0), socket_id_(0),
+		running_(false) {};
 
 	/** Get run specifications and allowed arguments list */
 	std::string &Usage() { return usage_; }
@@ -51,6 +52,7 @@ private:
 	std::string fcgi_socket_path_;
 	int fcgi_socket_backlog_;
 	int socket_id_;
+	bool running_;
 };
 
 } /* namespace apiai */

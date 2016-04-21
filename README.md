@@ -136,7 +136,7 @@ address (in a A.B.C.D:PORT form).
 
 As an alternative way you may use special spawn-fcgi utility:
 
-	$ spawn-fcgi -n -p 8000 ../asr-server/fcgi-nnet3-decoder
+	$ spawn-fcgi -n -p 8000 -- ../asr-server/fcgi-nnet3-decoder
 
 Configuring HTTP service
 ---------------------
@@ -203,7 +203,7 @@ Open nginx.conf and write down the following code:
 				fastcgi_buffering off;
 				# Disabling this option invokes immediate decoding incoming audio data
 				fastcgi_request_buffering off;
-				Include      fastcgi_params;
+				include      fastcgi_params;
 			}
 
 			location /asr-html {
