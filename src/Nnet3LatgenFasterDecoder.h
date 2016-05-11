@@ -18,6 +18,7 @@
 
 #include "OnlineDecoder.h"
 #include "online2/online-nnet3-decoding.h"
+#include "online2/online-nnet2-feature-pipeline.h"
 
 namespace apiai {
 
