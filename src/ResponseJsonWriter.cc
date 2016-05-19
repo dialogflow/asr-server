@@ -24,11 +24,11 @@ void ResponseJsonWriter::Write(std::ostringstream &outss, RecognitionResult &dat
   	<< "}";
 }
 
-void ResponseJsonWriter::SetResult(std::vector<RecognitionResult> &data) {
-	SetResult(data, false);
+void ResponseJsonWriter::SetResult(std::vector<RecognitionResult> &data, int timeMarkMs) {
+	SetResult(data, false, timeMarkMs);
 }
 
-void ResponseJsonWriter::SetResult(std::vector<RecognitionResult> &data, bool interrupted) {
+void ResponseJsonWriter::SetResult(std::vector<RecognitionResult> &data, bool interrupted, int timeMarkMs) {
 
 	std::ostringstream msg;
 	msg << "{";
@@ -41,12 +41,18 @@ void ResponseJsonWriter::SetResult(std::vector<RecognitionResult> &data, bool in
 		Write(msg, data.at(i));
 	}
 	msg << "]";
+	if (interrupted) {
+		msg << ",\"interrupted\":true";
+		if (timeMarkMs > 0) {
+		    msg << ",\"time\":" << timeMarkMs;
+		}
+	}
 	msg << "}" << std::endl;
 	*out_ << msg.str();
 	out_->flush();
 }
 
-void ResponseJsonWriter::SetIntermediateResult(RecognitionResult &decodedData) {
+void ResponseJsonWriter::SetIntermediateResult(RecognitionResult &decodedData, int timeMarkMs) {
 	std::ostringstream msg;
 	msg << "{";
 	msg << "\"status\":\"intermediate\"";

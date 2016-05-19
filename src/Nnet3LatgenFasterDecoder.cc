@@ -67,8 +67,8 @@ bool Nnet3LatgenFasterDecoder::Initialize(kaldi::OptionsItf &po) {
 	}
 
 	if (nnet3_rxfilename_ == "") {
-			return false;
-		}
+		return false;
+	}
 
     feature_info_ = new kaldi::OnlineNnet2FeaturePipelineInfo(feature_config_);
 
@@ -79,7 +79,7 @@ bool Nnet3LatgenFasterDecoder::Initialize(kaldi::OptionsItf &po) {
     }
 
     trans_model_ = new kaldi::TransitionModel();
-	nnet_ = new kaldi::nnet3::AmNnetSimple();
+    nnet_ = new kaldi::nnet3::AmNnetSimple();
     {
       bool binary;
       kaldi::Input ki(nnet3_rxfilename_, &binary);
@@ -131,8 +131,9 @@ bool Nnet3LatgenFasterDecoder::AcceptWaveform(kaldi::BaseFloat sampling_rate,
 {
 	feature_pipeline_->AcceptWaveform(sampling_rate, waveform);
 
-	if (do_endpointing_ && decoder_->EndpointDetected(endpoint_config_))
+	if (do_endpointing_ && decoder_->EndpointDetected(endpoint_config_)) {
 		return false;
+	}
 
 	decoder_->AdvanceDecoding();
 

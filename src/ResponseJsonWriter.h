@@ -29,9 +29,9 @@ public:
 	ResponseJsonWriter(std::ostream *osb) : out_(osb) {}
 	virtual ~ResponseJsonWriter() {};
 
-	virtual void SetResult(std::vector<RecognitionResult> &data);
-	virtual void SetResult(std::vector<RecognitionResult> &data, bool interrupted);
-	virtual void SetIntermediateResult(RecognitionResult &decodedData);
+	virtual void SetResult(std::vector<RecognitionResult> &data, int timeMarkMs);
+	virtual void SetResult(std::vector<RecognitionResult> &data, bool interrupted, int timeMarkMs);
+	virtual void SetIntermediateResult(RecognitionResult &decodedData, int timeMarkMs);
 	virtual void SetError(const std::string &message);
 private:
 	void Write(std::ostringstream &outss, RecognitionResult &data);

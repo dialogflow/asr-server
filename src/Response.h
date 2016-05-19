@@ -43,14 +43,14 @@ public:
 	virtual ~Response() {};
 
 	/** Set final results */
-	virtual void SetResult(std::vector<RecognitionResult> &data) = 0;
+	virtual void SetResult(std::vector<RecognitionResult> &data, int timeMarkMs) = 0;
 	/** Set final result.
 	 * Value of interrupted flag is set to true if recognition process was interrupted before
 	 * all given data been read.
 	 */
-	virtual void SetResult(std::vector<RecognitionResult> &data, bool interrupted) = 0;
+	virtual void SetResult(std::vector<RecognitionResult> &data, bool interrupted, int timeMarkMs) = 0;
 	/** Set intermediate result */
-	virtual void SetIntermediateResult(RecognitionResult &decodedData) = 0;
+	virtual void SetIntermediateResult(RecognitionResult &decodedData, int timeMarkMs) = 0;
 	/** Set error value */
 	virtual void SetError(const std::string &message) = 0;
 };

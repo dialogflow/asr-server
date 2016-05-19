@@ -194,7 +194,7 @@ void OnlineDecoder::Decode(Request &request, Response &response) {
 					if (!wordsEquals(prev_words, data.words)) {
 						RecognitionResult recognitionResult;
 						GetRecognitionResult(data, &recognitionResult);
-						response.SetIntermediateResult(recognitionResult);
+						response.SetIntermediateResult(recognitionResult, (samp_counter / (request.Frequency() / 1000)));
 						prev_words = data.words;
 						no_new_words_since = 0;
 					} else {
@@ -238,7 +238,7 @@ void OnlineDecoder::Decode(Request &request, Response &response) {
 		} else {
 			vector<RecognitionResult> recognitionResults;
 			GetRecognitionResult(result, &recognitionResults);
-			response.SetResult(recognitionResults, inputInterrupted);
+			response.SetResult(recognitionResults, inputInterrupted, (samp_counter / (request.Frequency() / 1000)));
 			KALDI_VLOG(1) << "Recognized @ " << getMillisecondsSince(start_time) << " ms";
 		}
 
