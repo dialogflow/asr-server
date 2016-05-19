@@ -41,53 +41,52 @@ void *FcgiDecodingApp::RunChildThread(void *arg) {
 }
 
 void FcgiDecodingApp::ProcessingRoutine(Decoder &decoder) {
-	if (socket_id_ < 0) {
-		KALDI_WARN << "Socket not opened";
-		return;
-	}
+    if (socket_id_ < 0) {
+	KALDI_WARN << "Socket not opened";
+	return;
+    }
 
     FCGX_Request request;
     FCGX_InitRequest(&request, socket_id_, 0);
 
     while (FCGX_Accept_r(&request) == 0) {
-        fcgi_streambuf cin_fcgi_streambuf(request.in);
-        fcgi_streambuf cout_fcgi_streambuf(request.out);
-        fcgi_streambuf cerr_fcgi_streambuf(request.err);
+	fcgi_streambuf cin_fcgi_streambuf(request.in);
+	fcgi_streambuf cout_fcgi_streambuf(request.out);
+	fcgi_streambuf cerr_fcgi_streambuf(request.err);
 
-		std::istream fcgiin(&cin_fcgi_streambuf);
-		std::ostream fcgiout(&cout_fcgi_streambuf);
-		std::ostream fcgierr(&cerr_fcgi_streambuf);
+	std::istream fcgiin(&cin_fcgi_streambuf);
+	std::ostream fcgiout(&cout_fcgi_streambuf);
+	std::ostream fcgierr(&cerr_fcgi_streambuf);
 
-        fcgiout << "Content-type: application/json\r\n"
-             << "\r\n";
+	fcgiout << "Content-type: application/json\r\n"
+		<< "\r\n";
 
-		try {
-			RequestRawReader reader(&fcgiin);
-			ResponseJsonWriter writer(&fcgiout);
+	try {
+		RequestRawReader reader(&fcgiin);
+		ResponseJsonWriter writer(&fcgiout);
 
-			char *queryString = FCGX_GetParam("QUERY_STRING", request.envp);
-			if (queryString) {
-				QueryStringParser queryStringParser(queryString);
-				std::string name, value;
-				while (queryStringParser.Next(&name, &value)) {
-					if ("nbest" == name) {
-						reader.BestCount(atoi(value.data()));
-						KALDI_VLOG(1) << "Setting n-best: " << reader.BestCount();
-					} else if ("intermediate" == name) {
-						reader.IntermediateIntervalMillisec(atoi(value.data()));
-						KALDI_VLOG(1) << "Setting intermediate interval: " << reader.IntermediateIntervalMillisec() << " ms";
-					} else {
-						KALDI_VLOG(1) << "Skipping unknown parameter \"" << name << "\"";
-					}
+		char *queryString = FCGX_GetParam("QUERY_STRING", request.envp);
+		if (queryString) {
+			QueryStringParser queryStringParser(queryString);
+			std::string name, value;
+			while (queryStringParser.Next(&name, &value)) {
+				if ("nbest" == name) {
+					reader.BestCount(atoi(value.data()));
+					KALDI_VLOG(1) << "Setting n-best: " << reader.BestCount();
+				} else if ("intermediate" == name) {
+					reader.IntermediateIntervalMillisec(atoi(value.data()));
+					KALDI_VLOG(1) << "Setting intermediate interval: " << reader.IntermediateIntervalMillisec() << " ms";
+				} else {
+					KALDI_VLOG(1) << "Skipping unknown parameter \"" << name << "\"";
 				}
 			}
-
-			decoder.Decode(reader, writer);
-		} catch (std::exception &e) {
-			KALDI_LOG << "Fatal exception: " << e.what();
 		}
+		decoder.Decode(reader, writer);
+	} catch (std::exception &e) {
+		KALDI_LOG << "Fatal exception: " << e.what();
+	}
 
-		FCGX_Finish_r(&request);
+	FCGX_Finish_r(&request);
     }
 }
 
