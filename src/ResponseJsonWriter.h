@@ -30,7 +30,7 @@ public:
 	virtual ~ResponseJsonWriter() {};
 
 	virtual void SetResult(std::vector<RecognitionResult> &data, int timeMarkMs);
-	virtual void SetResult(std::vector<RecognitionResult> &data, bool interrupted, int timeMarkMs);
+	virtual void SetResult(std::vector<RecognitionResult> &data, const std::string &interrupted, int timeMarkMs);
 	virtual void SetIntermediateResult(RecognitionResult &decodedData, int timeMarkMs);
 	virtual void SetError(const std::string &message);
 private:

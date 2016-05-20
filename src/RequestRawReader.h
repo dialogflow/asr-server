@@ -46,6 +46,7 @@ public:
 
 		bestCount_ = 1;
 		intermediateMillisecondsInterval_ = 0;
+		doEndpointing_ = false;
 	}
 
 	virtual ~RequestRawReader() {
@@ -61,6 +62,7 @@ public:
 
 	virtual kaldi::int32 BestCount(void) const { return bestCount_; }
 	virtual kaldi::int32 IntermediateIntervalMillisec(void) const { return intermediateMillisecondsInterval_; }
+	virtual bool DoEndpointing(void) const { return doEndpointing_; }
 
 	/** Set number of suggested recognition result variants */
 	void BestCount(kaldi::int32 value) { bestCount_ = std::max(NBEST_MIN, std::min(NBEST_MAX, value)); }
@@ -68,6 +70,8 @@ public:
 	void IntermediateIntervalMillisec(kaldi::int32 value) {
 		intermediateMillisecondsInterval_ = value > 0 ? std::max(value, INTERMEDIATE_MIN) : 0;
 	}
+	/** Set end-of-speech points detection flag. */
+	void DoEndpointing(bool value) { doEndpointing_ = value; }
 
 	virtual kaldi::SubVector<kaldi::BaseFloat> *NextChunk(kaldi::int32 samples_count);
 	virtual kaldi::SubVector<kaldi::BaseFloat> *NextChunk(kaldi::int32 samples_count, kaldi::int32 timeout_ms);
@@ -80,6 +84,7 @@ private:
 
 	kaldi::int32 bestCount_;
 	kaldi::int32 intermediateMillisecondsInterval_;
+	bool doEndpointing_;
 
 	std::istream *is_;
 	std::vector<kaldi::BaseFloat> buffer_;

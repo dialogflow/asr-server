@@ -25,10 +25,10 @@ void ResponseJsonWriter::Write(std::ostringstream &outss, RecognitionResult &dat
 }
 
 void ResponseJsonWriter::SetResult(std::vector<RecognitionResult> &data, int timeMarkMs) {
-	SetResult(data, false, timeMarkMs);
+	SetResult(data, NOT_INTERRUPTED, timeMarkMs);
 }
 
-void ResponseJsonWriter::SetResult(std::vector<RecognitionResult> &data, bool interrupted, int timeMarkMs) {
+void ResponseJsonWriter::SetResult(std::vector<RecognitionResult> &data, const std::string &interrupted, int timeMarkMs) {
 
 	std::ostringstream msg;
 	msg << "{";
@@ -41,8 +41,8 @@ void ResponseJsonWriter::SetResult(std::vector<RecognitionResult> &data, bool in
 		Write(msg, data.at(i));
 	}
 	msg << "]";
-	if (interrupted) {
-		msg << ",\"interrupted\":true";
+	if (interrupted.size() > 0) {
+		msg << ",\"interrupted\":\"" << interrupted << "\"";
 		if (timeMarkMs > 0) {
 		    msg << ",\"time\":" << timeMarkMs;
 		}

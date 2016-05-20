@@ -23,8 +23,30 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <signal.h>
+#include <sstream>
+#include <iomanip>
+#include <algorithm>
+#include <cctype>
 
 namespace apiai {
+
+const std::string PARAMETER_NAME_NBEST = "nbest";
+const std::string PARAMETER_NAME_INTERMEDIATE = "intermediate";
+const std::string PARAMETER_NAME_END_OF_SPEECH = "endofspeech";
+
+bool to_bool(std::string &str) {
+    std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+    std::istringstream is(str);
+    bool b;
+    is >> std::boolalpha >> b;
+    return b;
+}
+
+bool to_bool(const char *chars) {
+	std::string str(chars);
+    return to_bool(str);
+}
+
 
 void FcgiDecodingApp::RegisterOptions(kaldi::OptionsItf &po) {
     po.Register("fcgi-socket", &fcgi_socket_path_, "FastCGI connection string, if undefined then stdin and stdout will be used");
@@ -65,17 +87,23 @@ void FcgiDecodingApp::ProcessingRoutine(Decoder &decoder) {
 		RequestRawReader reader(&fcgiin);
 		ResponseJsonWriter writer(&fcgiout);
 
+		// Let's enable it by default
+		reader.DoEndpointing(true);
+
 		char *queryString = FCGX_GetParam("QUERY_STRING", request.envp);
 		if (queryString) {
 			QueryStringParser queryStringParser(queryString);
 			std::string name, value;
 			while (queryStringParser.Next(&name, &value)) {
-				if ("nbest" == name) {
+				if (PARAMETER_NAME_NBEST == name) {
 					reader.BestCount(atoi(value.data()));
 					KALDI_VLOG(1) << "Setting n-best: " << reader.BestCount();
-				} else if ("intermediate" == name) {
+				} else if (PARAMETER_NAME_INTERMEDIATE == name) {
 					reader.IntermediateIntervalMillisec(atoi(value.data()));
 					KALDI_VLOG(1) << "Setting intermediate interval: " << reader.IntermediateIntervalMillisec() << " ms";
+				} else if (PARAMETER_NAME_END_OF_SPEECH == name) {
+					reader.DoEndpointing(to_bool(value.data()));
+					KALDI_VLOG(1) << "Setting end-of-speech: " << (reader.DoEndpointing() ? "enabled" : "disabled");
 				} else {
 					KALDI_VLOG(1) << "Skipping unknown parameter \"" << name << "\"";
 				}
@@ -106,7 +134,12 @@ int FcgiDecodingApp::Run(int argc, char **argv) {
 		"--max-active=2000",
 		"--beam=15.0",
 		"--lattice-beam=6.0",
-		"--acoustic-scale=1.0"
+		"--acoustic-scale=1.0",
+		"--do-endpointing=true",
+		"--endpoint.silence-phones=1",
+		"--endpoint.rule1.min-trailing-silence=0.5",
+		"--endpoint.rule2.min-trailing-silence=0.15",
+		"--endpoint.rule3.min-trailing-silence=0.1",
 	};
 
     FCGX_Init();

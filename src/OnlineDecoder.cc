@@ -84,6 +84,11 @@ OnlineDecoder::OnlineDecoder() {
 OnlineDecoder::~OnlineDecoder() {
 }
 
+bool OnlineDecoder::AcceptWaveform(kaldi::BaseFloat sampling_rate,
+					const kaldi::VectorBase<kaldi::BaseFloat> &waveform)
+{
+	return AcceptWaveform(sampling_rate, waveform, do_endpointing_);
+}
 
 void OnlineDecoder::GetRecognitionResult(DecodedData &input, RecognitionResult *output) {
 	  // TODO move parameters to external file
@@ -158,21 +163,21 @@ void OnlineDecoder::Decode(Request &request, Response &response) {
 		int max_samples_limit = max_record_size_seconds_ > 0 ? max_record_size_seconds_ * request.Frequency() : 0;
 
 		std::vector<int32> prev_words;
-		int no_new_words_since = 0;
 		int samples_per_chunk = int(chunk_length_secs_ * request.Frequency());
 
 		int samp_counter = 0;
 
-		bool check_lattice_unchanged_interval = max_lattice_unchanged_interval_seconds_ > 0;
-
 		kaldi::SubVector<kaldi::BaseFloat> *wave_part;
 
+		bool do_endpointing = do_endpointing_ && request.DoEndpointing();
+		std::string requestInterrupted = Response::NOT_INTERRUPTED;
 		int samples_left = (max_samples_limit > 0) ? std::min(max_samples_limit, samples_per_chunk) : samples_per_chunk;
 		while ((wave_part = request.NextChunk(samples_left)) != NULL) {
 
 			samp_counter += wave_part->Dim();
 
-			if (AcceptWaveform(request.Frequency(), *wave_part) == false && do_endpointing_) {
+			if (AcceptWaveform(request.Frequency(), *wave_part, do_endpointing) == false && do_endpointing) {
+				requestInterrupted = Response::INTERRUPTED_END_OF_SPEECH;
 				KALDI_VLOG(1) << "End Point Detected @ " << (getMillisecondsSince(start_time)) << " ms";
 				break;
 			}
@@ -180,6 +185,7 @@ void OnlineDecoder::Decode(Request &request, Response &response) {
 
 			if (max_samples_limit > 0) {
 				if (samp_counter > max_samples_limit) {
+					requestInterrupted = Response::INTERRUPTED_DATA_SIZE_LIMIT;
 					KALDI_VLOG(1) << "Interrupted by record length @ " << progress_time << " ms";
 					break;
 				}
@@ -196,28 +202,15 @@ void OnlineDecoder::Decode(Request &request, Response &response) {
 						GetRecognitionResult(data, &recognitionResult);
 						response.SetIntermediateResult(recognitionResult, (samp_counter / (request.Frequency() / 1000)));
 						prev_words = data.words;
-						no_new_words_since = 0;
-					} else {
-						if (check_lattice_unchanged_interval) {
-							KALDI_VLOG(1) << "Lattice Unchanged @ " << progress_time << " ms";
-							if (no_new_words_since) {
-								float unchangedInterval = (float)(samp_counter - no_new_words_since) / request.Frequency();
-								if (unchangedInterval >= max_lattice_unchanged_interval_seconds_) {
-									KALDI_VLOG(1) << "Interrupting due to no speech for " << unchangedInterval
-											<< " s @ " << progress_time << " ms";
-									break;
-								}
-							} else {
-								no_new_words_since = samp_counter;
-							}
-						}
 					}
 				} else {
 					prev_words.clear();
 				}
 			}
 		}
-		bool inputInterrupted = (wave_part != NULL);
+		if (wave_part != NULL && requestInterrupted.size() == 0) {
+			requestInterrupted = Response::INTERRUPTED_UNEXPECTED;
+		}
 
 		if (samp_counter < PAD_SIZE) {
 			KALDI_VLOG(1) << "Input too short, padding with " << (PAD_SIZE - samp_counter) << " zero samples";
@@ -238,7 +231,7 @@ void OnlineDecoder::Decode(Request &request, Response &response) {
 		} else {
 			vector<RecognitionResult> recognitionResults;
 			GetRecognitionResult(result, &recognitionResults);
-			response.SetResult(recognitionResults, inputInterrupted, (samp_counter / (request.Frequency() / 1000)));
+			response.SetResult(recognitionResults, requestInterrupted, (samp_counter / (request.Frequency() / 1000)));
 			KALDI_VLOG(1) << "Recognized @ " << getMillisecondsSince(start_time) << " ms";
 		}
 

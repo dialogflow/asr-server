@@ -37,6 +37,9 @@ public:
 	 *  If non-positive given then no intermediate results would be calculated */
 	virtual kaldi::int32 IntermediateIntervalMillisec(void) const = 0;
 
+	/** Get end-of-speech points detection flag. */
+	virtual bool DoEndpointing(void) const = 0;
+
 	/**
 	 * Get next chunk of audio data samples.
 	 * Max number of samples specified by samples_count value

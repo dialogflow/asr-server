@@ -45,8 +45,9 @@ branch please use our branched off version available at
 	git clone https://github.com/api-ai/kaldi kaldi-apiai
 
 This command will clone source tree to kaldi-apiai directory. 
-To configure and build Kaldi please refer to its official instruction:
-<http://kaldi.sourceforge.net/install.html>
+To configure and build Kaldi please refer to `kaldi-apiai/INSTALL` file.
+For detailed information please look for Kaldi official instruction:
+<http://www.danielpovey.com/kaldi-docs/install.html>
 
 ### Installing libraries
 
@@ -248,23 +249,28 @@ On successfull recognition the command will return something like this:
 
 	{
 		"status":"ok",
-		"data":[
-			{"confidence":0.900359,"text":"HELLO WORLD"}
-		]
+		"data":[{"confidence":0.900359,"text":"HELLO WORLD"}]
 	}
 
 On error the return value will be like this:
 
 	{"status":"error","data":[{"text":"Failed to decode"}]}
 
-You may specify some decoding parameters in request query string, 
-e.g. to change the number of possible recognition results set 
-`nbest` parameter:
+### Recognition request parameters
 
-	$ curl -H "Content-Type: application/octet-stream" --data-binary @audio.raw http://localhost/asr?nbest=2
+There are several parameters to tune up recognition process. All parameters are expected to be passed via query string as web-form fields enumeration (e.g. `?name1=value1&name2=value2`).
 
-to get something similar to folowing:
-
+<table border="1">
+	<tr>
+		<th>Parameter</th>
+		<th>Description</th>
+		<th>Acceptable values</th>
+		<th>Default value</th>
+	</tr>
+	<tr>
+		<td>nbest</td>
+		<td>Set the number of possible returned values
+		
 	{
 		"status":"ok",
 		"data":[
@@ -272,3 +278,42 @@ to get something similar to folowing:
 			{"confidence":0.89012,"text":"HELLO WORD"}
 		]
 	}
+</td>
+		<td>1-10</td>
+		<td>1</td>
+	</tr>
+	<tr>
+		<td>intermediate</td>
+		<td>Set time interval in milliseconds between intermediate results while 
+			recognition being in progress. Each intermediate result have "status" field
+			set to "intermediate" and separated between each other with new-line. Last 
+			one will have "status" set to "ok"
+
+	{"status":"intermediate","data":[{"confidence":0.908981,"text":"HELLO"}]}
+	{"status":"intermediate","data":[{"confidence":0.903025,"text":"HELLO WORLD"}]}
+	{"status":"ok","data":[{"confidence":0.903025,"text":"HELLO WORLD"}]}
+
+</td>
+		<td> >500</td>
+		<td>0</td>
+	</tr>
+	<tr>
+		<td>endofspeech</td>
+		<td>Enable or disable end-of-speech points during recognition. If endpoint
+			detected all then current result have returned and the rest data would 
+			be skipped. Also in case of interrupted recognition 2 fields would be added
+			to response: "interrupted" with value "endofspeech", and "time" with time point
+			showing the number of milliseconds have been processed.
+
+	{
+		"status":"ok",
+		"data":[{"confidence":0.900359,"text":"HELLO WORLD"}],
+		"interrupted":"endofspeech",
+		"time":3800
+	}
+
+</td>
+		<td>true or false</td>
+		<td>true</td>
+	</tr>
+</table>

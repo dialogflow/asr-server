@@ -32,7 +32,8 @@ public:
 	virtual bool Initialize(kaldi::OptionsItf &po);
 protected:
 	virtual bool AcceptWaveform(kaldi::BaseFloat sampling_rate,
-			const kaldi::VectorBase<kaldi::BaseFloat> &waveform);
+			const kaldi::VectorBase<kaldi::BaseFloat> &waveform,
+			const bool do_endpointing);
 	virtual void InputStarted();
 	virtual void InputFinished();
 	virtual void GetLattice(kaldi::CompactLattice *clat);

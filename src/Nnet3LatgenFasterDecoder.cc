@@ -127,11 +127,12 @@ void Nnet3LatgenFasterDecoder::CleanUp()
 }
 
 bool Nnet3LatgenFasterDecoder::AcceptWaveform(kaldi::BaseFloat sampling_rate,
-		const kaldi::VectorBase<kaldi::BaseFloat> &waveform)
+		const kaldi::VectorBase<kaldi::BaseFloat> &waveform,
+		const bool do_endpointing)
 {
 	feature_pipeline_->AcceptWaveform(sampling_rate, waveform);
 
-	if (do_endpointing_ && decoder_->EndpointDetected(endpoint_config_)) {
+	if (do_endpointing && decoder_->EndpointDetected(endpoint_config_)) {
 		return false;
 	}
 

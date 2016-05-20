@@ -48,11 +48,16 @@ public:
 	 * Value of interrupted flag is set to true if recognition process was interrupted before
 	 * all given data been read.
 	 */
-	virtual void SetResult(std::vector<RecognitionResult> &data, bool interrupted, int timeMarkMs) = 0;
+	virtual void SetResult(std::vector<RecognitionResult> &data, const std::string &interrupted, int timeMarkMs) = 0;
 	/** Set intermediate result */
 	virtual void SetIntermediateResult(RecognitionResult &decodedData, int timeMarkMs) = 0;
 	/** Set error value */
 	virtual void SetError(const std::string &message) = 0;
+
+	static const std::string NOT_INTERRUPTED;
+	static const std::string INTERRUPTED_UNEXPECTED;
+	static const std::string INTERRUPTED_END_OF_SPEECH;
+	static const std::string INTERRUPTED_DATA_SIZE_LIMIT;
 };
 
 } /* namespace apiai */
