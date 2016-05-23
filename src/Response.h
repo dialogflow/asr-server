@@ -58,6 +58,7 @@ public:
 	static const std::string INTERRUPTED_UNEXPECTED;
 	static const std::string INTERRUPTED_END_OF_SPEECH;
 	static const std::string INTERRUPTED_DATA_SIZE_LIMIT;
+	static const std::string INTERRUPTED_TIMEOUT;
 };
 
 } /* namespace apiai */

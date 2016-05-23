@@ -76,6 +76,7 @@ OnlineDecoder::OnlineDecoder() {
 	do_endpointing_ = false;
 	max_record_size_seconds_ = 0;
 	max_lattice_unchanged_interval_seconds_ = 0;
+	decoding_timeout_seconds_ = 0;
 
 	word_syms_rxfilename_ = "words.txt";
 	fst_rxfilename_ = "HCLG.fst";
@@ -135,6 +136,9 @@ void OnlineDecoder::RegisterOptions(kaldi::OptionsItf &po) {
 
     po.Register("max-lattice-unchanged-interval", &max_lattice_unchanged_interval_seconds_,
 			"Max interval length in seconds of lattice recognised unchanged. Note: Non-positive value to deactivate.");
+
+    po.Register("decoding-timeout", &decoding_timeout_seconds_,
+    		"Decoding process timeout given in seconds. Timeout disabled if value is non-positive.");
 }
 
 bool OnlineDecoder::Initialize(kaldi::OptionsItf &po) {
@@ -172,7 +176,11 @@ void OnlineDecoder::Decode(Request &request, Response &response) {
 		bool do_endpointing = do_endpointing_ && request.DoEndpointing();
 		std::string requestInterrupted = Response::NOT_INTERRUPTED;
 		int samples_left = (max_samples_limit > 0) ? std::min(max_samples_limit, samples_per_chunk) : samples_per_chunk;
-		while ((wave_part = request.NextChunk(samples_left)) != NULL) {
+		const bool decoding_timeout_enabled = decoding_timeout_seconds_ > 0;
+		const int decoding_timeout_ms = decoding_timeout_enabled ? decoding_timeout_seconds_ * 1000 : 0;
+
+		int time_left_ms = decoding_timeout_ms;
+		while ((wave_part = request.NextChunk(samples_left, time_left_ms)) != NULL) {
 
 			samp_counter += wave_part->Dim();
 
@@ -207,9 +215,20 @@ void OnlineDecoder::Decode(Request &request, Response &response) {
 					prev_words.clear();
 				}
 			}
+			if (decoding_timeout_enabled) {
+				time_left_ms = decoding_timeout_ms - getMillisecondsSince(start_time);
+				if (time_left_ms <= 0) {
+					break;
+				}
+			}
 		}
 		if (wave_part != NULL && requestInterrupted.size() == 0) {
-			requestInterrupted = Response::INTERRUPTED_UNEXPECTED;
+			if (decoding_timeout_enabled && (decoding_timeout_ms - getMillisecondsSince(start_time) <= 0)) {
+				KALDI_VLOG(1) << "Timeout reached @ " << (getMillisecondsSince(start_time)) << " ms";
+				requestInterrupted = Response::INTERRUPTED_TIMEOUT;
+			} else {
+				requestInterrupted = Response::INTERRUPTED_UNEXPECTED;
+			}
 		}
 
 		if (samp_counter < PAD_SIZE) {

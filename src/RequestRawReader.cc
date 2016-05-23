@@ -20,7 +20,7 @@
 
 namespace apiai {
 
-const milliseconds_t data_wait_interval_ms = 50;
+const milliseconds_t data_wait_interval_ms = 500;
 
 kaldi::SubVector<kaldi::BaseFloat> *RequestRawReader::NextChunk(kaldi::int32 samples_count)
 {
@@ -28,6 +28,7 @@ kaldi::SubVector<kaldi::BaseFloat> *RequestRawReader::NextChunk(kaldi::int32 sam
 }
 
 kaldi::SubVector<kaldi::BaseFloat> *RequestRawReader::NextChunk(kaldi::int32 samples_count, kaldi::int32 timeout_ms) {
+	// TODO: timeout_ms is not supported because libfcgi do not provides "readsome" functionality
 	if (samples_count <= 0) {
 		return NULL;
 	}
@@ -45,25 +46,14 @@ kaldi::SubVector<kaldi::BaseFloat> *RequestRawReader::NextChunk(kaldi::int32 sam
 
 	int bytes_read = 0;
 
-	if (timeout_ms > 0) {
-		milliseconds_t start_time = getMilliseconds();
-		milliseconds_t time_left = timeout_ms;
-		while (bytes_read < chunk_size && time_left > 0) {
-			bytes_read += is_->readsome(audioData.data() + bytes_read, chunk_size - bytes_read);
-			KALDI_LOG << "Read: " << bytes_read;
-			usleep(std::min(time_left, data_wait_interval_ms) * 1000);
-			time_left = timeout_ms - getMillisecondsSince(start_time);
-		}
-	} else {
-		is_->read(audioData.data(), chunk_size);
+	is_->read(audioData.data(), chunk_size);
 
-		bytes_read = is_->gcount();
+	bytes_read = is_->gcount();
 
-		if (is_->gcount() == 0) {
-			fail_ = true;
-			last_error_message_ == "Failed to read any data";
-			return NULL;
-		}
+	if (is_->gcount() == 0) {
+		fail_ = true;
+		last_error_message_ == "Failed to read any data";
+		return NULL;
 	}
 
 	buffer_.clear();

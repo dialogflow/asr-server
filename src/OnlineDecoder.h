@@ -77,6 +77,8 @@ protected:
 	kaldi::BaseFloat chunk_length_secs_;
 	kaldi::BaseFloat acoustic_scale_;
 	kaldi::BaseFloat lm_scale_;
+
+
 	/**
 	 * Max length of record in seconds to be recognised.
 	 * All records longer than given value will be truncated. Note: Non-positive value to deactivate.
@@ -86,6 +88,11 @@ protected:
 	 * Max interval length in seconds of lattice recognised unchanged. Non-positive value to deactivate
 	 */
 	kaldi::BaseFloat max_lattice_unchanged_interval_seconds_;
+
+	/** Decoding process timeout given in seconds.
+	 * Timeout disabled if value is non-positive
+	 */
+	kaldi::BaseFloat decoding_timeout_seconds_;
 
 	bool do_endpointing_;
 

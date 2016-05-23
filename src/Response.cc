@@ -21,6 +21,7 @@ const std::string Response::NOT_INTERRUPTED = "";
 const std::string Response::INTERRUPTED_UNEXPECTED="unexpected";
 const std::string Response::INTERRUPTED_END_OF_SPEECH="endofspeech";
 const std::string Response::INTERRUPTED_DATA_SIZE_LIMIT="sizelimit";
+const std::string Response::INTERRUPTED_TIMEOUT="timeout";
 
 } /* namespace apiai */
 
