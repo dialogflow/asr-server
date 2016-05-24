@@ -13,8 +13,8 @@
 // See the Apache 2 License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SRC_RESPONSE_H_
-#define SRC_RESPONSE_H_
+#ifndef RESPONSE_H_
+#define RESPONSE_H_
 
 #include <string>
 #include <vector>
@@ -42,6 +42,9 @@ class Response {
 public:
 	virtual ~Response() {};
 
+	/** Get content type MIME string */
+	virtual const std::string &GetContentType() = 0;
+
 	/** Set final results */
 	virtual void SetResult(std::vector<RecognitionResult> &data, int timeMarkMs) = 0;
 	/** Set final result.
@@ -63,4 +66,4 @@ public:
 
 } /* namespace apiai */
 
-#endif /* SRC_RESPONSE_H_ */
+#endif /* RESPONSE_H_ */

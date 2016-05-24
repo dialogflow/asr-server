@@ -17,6 +17,13 @@
 
 namespace apiai {
 
+const std::string ResponseJsonWriter::MIME_APPLICATION_JAVA = "application/json";
+
+void ResponseJsonWriter::SendJson(std::string json, bool final) {
+	*out_ << json << std::endl;
+	out_->flush();
+}
+
 void ResponseJsonWriter::Write(std::ostringstream &outss, RecognitionResult &data) {
   outss << "{"
   	<< "\"confidence\":" << data.confidence << ","
@@ -47,9 +54,8 @@ void ResponseJsonWriter::SetResult(std::vector<RecognitionResult> &data, const s
 		    msg << ",\"time\":" << timeMarkMs;
 		}
 	}
-	msg << "}" << std::endl;
-	*out_ << msg.str();
-	out_->flush();
+	msg << "}";
+	SendJson(msg.str(), true);
 }
 
 void ResponseJsonWriter::SetIntermediateResult(RecognitionResult &decodedData, int timeMarkMs) {
@@ -58,9 +64,8 @@ void ResponseJsonWriter::SetIntermediateResult(RecognitionResult &decodedData, i
 	msg << "\"status\":\"intermediate\"";
 	msg << ",\"data\":[";
 	Write(msg, decodedData);
-	msg << "]}" << std::endl;
-	*out_ << msg.str();
-	out_->flush();
+	msg << "]}";
+	SendJson(msg.str(), false);
 }
 
 void ResponseJsonWriter::SetError(const std::string &message) {
@@ -68,9 +73,8 @@ void ResponseJsonWriter::SetError(const std::string &message) {
     msg << "{";
     msg << "\"status\":\"error\"";
     msg << ",\"data\":[{\"text\":\""<< message << "\"}]";
-    msg << "}" << std::endl;
-    *out_ << msg.str();
-    out_->flush();
+    msg << "}";
+    SendJson(msg.str(), true);
 }
 
 } /* namespace apiai */

@@ -15,6 +15,7 @@
 
 #include "RequestRawReader.h"
 #include "ResponseJsonWriter.h"
+#include "ResponseMultipartJsonWriter.h"
 #include "FcgiDecodingApp.h"
 #include "QueryStringParser.h"
 #include <fcgio.h>
@@ -27,6 +28,7 @@
 #include <iomanip>
 #include <algorithm>
 #include <cctype>
+#include <memory>
 
 namespace apiai {
 
@@ -47,6 +49,27 @@ bool to_bool(const char *chars) {
     return to_bool(str);
 }
 
+void apply_request_parameters(FCGX_Request &request, RequestRawReader &reader) {
+	char *queryString = FCGX_GetParam("QUERY_STRING", request.envp);
+	if (queryString) {
+		QueryStringParser queryStringParser(queryString);
+		std::string name, value;
+		while (queryStringParser.Next(&name, &value)) {
+			if (PARAMETER_NAME_NBEST == name) {
+				reader.BestCount(atoi(value.data()));
+				KALDI_VLOG(1) << "Setting n-best: " << reader.BestCount();
+			} else if (PARAMETER_NAME_INTERMEDIATE == name) {
+				reader.IntermediateIntervalMillisec(atoi(value.data()));
+				KALDI_VLOG(1) << "Setting intermediate interval: " << reader.IntermediateIntervalMillisec() << " ms";
+			} else if (PARAMETER_NAME_END_OF_SPEECH == name) {
+				reader.DoEndpointing(to_bool(value.data()));
+				KALDI_VLOG(1) << "Setting end-of-speech: " << (reader.DoEndpointing() ? "enabled" : "disabled");
+			} else {
+				KALDI_VLOG(1) << "Skipping unknown parameter \"" << name << "\"";
+			}
+		}
+	}
+}
 
 void FcgiDecodingApp::RegisterOptions(kaldi::OptionsItf &po) {
     po.Register("fcgi-socket", &fcgi_socket_path_, "FastCGI connection string, if undefined then stdin and stdout will be used");
@@ -80,36 +103,23 @@ void FcgiDecodingApp::ProcessingRoutine(Decoder &decoder) {
 	std::ostream fcgiout(&cout_fcgi_streambuf);
 	std::ostream fcgierr(&cerr_fcgi_streambuf);
 
-	fcgiout << "Content-type: application/json\r\n"
-		<< "\r\n";
-
 	try {
 		RequestRawReader reader(&fcgiin);
-		ResponseJsonWriter writer(&fcgiout);
-
 		// Let's enable it by default
 		reader.DoEndpointing(true);
 
-		char *queryString = FCGX_GetParam("QUERY_STRING", request.envp);
-		if (queryString) {
-			QueryStringParser queryStringParser(queryString);
-			std::string name, value;
-			while (queryStringParser.Next(&name, &value)) {
-				if (PARAMETER_NAME_NBEST == name) {
-					reader.BestCount(atoi(value.data()));
-					KALDI_VLOG(1) << "Setting n-best: " << reader.BestCount();
-				} else if (PARAMETER_NAME_INTERMEDIATE == name) {
-					reader.IntermediateIntervalMillisec(atoi(value.data()));
-					KALDI_VLOG(1) << "Setting intermediate interval: " << reader.IntermediateIntervalMillisec() << " ms";
-				} else if (PARAMETER_NAME_END_OF_SPEECH == name) {
-					reader.DoEndpointing(to_bool(value.data()));
-					KALDI_VLOG(1) << "Setting end-of-speech: " << (reader.DoEndpointing() ? "enabled" : "disabled");
-				} else {
-					KALDI_VLOG(1) << "Skipping unknown parameter \"" << name << "\"";
-				}
-			}
+		apply_request_parameters(request, reader);
+
+		std::auto_ptr<ResponseJsonWriter> writer_ptr;
+		if (reader.IntermediateIntervalMillisec() > 0) {
+			writer_ptr.reset(new ResponseMultipartJsonWriter(&fcgiout));
+		} else {
+			writer_ptr.reset(new ResponseJsonWriter(&fcgiout));
 		}
-		decoder.Decode(reader, writer);
+
+		fcgiout << "Content-type: "<< writer_ptr.get()->GetContentType() <<"\r\n\r\n";
+
+		decoder.Decode(reader, *(writer_ptr.get()));
 	} catch (std::exception &e) {
 		KALDI_LOG << "Fatal exception: " << e.what();
 	}

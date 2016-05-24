@@ -270,14 +270,13 @@ There are several parameters to tune up recognition process. All parameters are 
 	<tr>
 		<td>nbest</td>
 		<td>Set the number of possible returned values
-		
-	{
-		"status":"ok",
-		"data":[
-			{"confidence":0.900359,"text":"HELLO WORLD"},
-			{"confidence":0.89012,"text":"HELLO WORD"}
-		]
-	}
+<pre>{<br>
+	"status":"ok",<br>
+	"data":[<br>
+		{"confidence":0.900359,"text":"HELLO WORLD"},<br>
+		{"confidence":0.89012,"text":"HELLO WORD"}<br>
+	]<br>
+}</pre>
 </td>
 		<td>1-10</td>
 		<td>1</td>
@@ -285,14 +284,35 @@ There are several parameters to tune up recognition process. All parameters are 
 	<tr>
 		<td>intermediate</td>
 		<td>Set time interval in milliseconds between intermediate results while 
-			recognition being in progress. Each intermediate result have "status" field
-			set to "intermediate" and separated between each other with new-line. Last 
-			one will have "status" set to "ok"
-
-	{"status":"intermediate","data":[{"confidence":0.908981,"text":"HELLO"}]}
-	{"status":"intermediate","data":[{"confidence":0.903025,"text":"HELLO WORLD"}]}
-	{"status":"ok","data":[{"confidence":0.903025,"text":"HELLO WORLD"}]}
-
+			recognition being in progress.<br>
+			The result returned as an <a href="https://www.w3.org/Protocols/rfc1341/7_2_Multipart.html">
+			HTTP multipart response</a> with "content-type"
+			set to "multipart/x-mixed-replace" and each response part
+			has "Content-Disposition" header value equal to "form-data".
+			Intermediate parts named as "partial" and a final part is named as "result".
+			Also each intermediate document have "status" field set to "intermediate",
+			last one will have "status" set to "ok".
+<pre>
+--ResponseBoundary<br>
+Content-Disposition: form-data; name="partial"<br>
+Content-type: application/json<br>
+<br>
+{"status":"intermediate","data":[{"confidence":0.908981,"text":"HELLO"}]}<br>
+<br>
+--ResponseBoundary<br>
+Content-Disposition: form-data; name="partial"<br>
+Content-type: application/json<br>
+<br>
+{"status":"intermediate","data":[{"confidence":0.903025,"text":"HELLO WORLD"}]}<br>
+<br>
+--ResponseBoundary
+Content-Disposition: form-data; name="result"<br>
+Content-type: application/json<br>
+<br>
+{"status":"ok","data":[{"confidence":0.903025,"text":"HELLO WORLD"}]}<br>
+<br>
+--ResponseBoundary--
+</pre>
 </td>
 		<td> >500</td>
 		<td>0</td>
@@ -305,13 +325,12 @@ There are several parameters to tune up recognition process. All parameters are 
 			to response: "interrupted" with value "endofspeech", and "time" with time point
 			showing the number of milliseconds have been processed.
 
-	{
-		"status":"ok",
-		"data":[{"confidence":0.900359,"text":"HELLO WORLD"}],
-		"interrupted":"endofspeech",
-		"time":3800
-	}
-
+<pre>{<br>
+	"status":"ok",<br>
+	"data":[{"confidence":0.900359,"text":"HELLO WORLD"}],<br>
+	"interrupted":"endofspeech",<br>
+	"time":3800<br>
+}</pre>
 </td>
 		<td>true or false</td>
 		<td>true</td>

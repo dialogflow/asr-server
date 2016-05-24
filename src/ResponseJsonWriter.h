@@ -13,8 +13,8 @@
 // See the Apache 2 License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef APIAI_DECODER_STIRESPONSEWRITER_H_
-#define APIAI_DECODER_STIRESPONSEWRITER_H_
+#ifndef RESPONSEJSONWRITER_H_
+#define RESPONSEJSONWRITER_H_
 
 #include "Response.h"
 #include <sstream>
@@ -29,15 +29,23 @@ public:
 	ResponseJsonWriter(std::ostream *osb) : out_(osb) {}
 	virtual ~ResponseJsonWriter() {};
 
+	virtual const std::string &GetContentType() { return MIME_APPLICATION_JAVA; }
+
 	virtual void SetResult(std::vector<RecognitionResult> &data, int timeMarkMs);
 	virtual void SetResult(std::vector<RecognitionResult> &data, const std::string &interrupted, int timeMarkMs);
 	virtual void SetIntermediateResult(RecognitionResult &decodedData, int timeMarkMs);
 	virtual void SetError(const std::string &message);
+protected:
+	std::ostream *out() { return out_; }
+
+	virtual void SendJson(std::string json, bool final);
 private:
 	void Write(std::ostringstream &outss, RecognitionResult &data);
 	std::ostream *out_;
+
+	static const std::string MIME_APPLICATION_JAVA;
 };
 
 } /* namespace apiai */
 
-#endif /* APIAI_DECODER_STIRESPONSEWRITER_H_ */
+#endif /* RESPONSEJSONWRITER_H_ */
