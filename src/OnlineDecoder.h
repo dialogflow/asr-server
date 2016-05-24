@@ -63,7 +63,7 @@ protected:
 	/**
 	 * Put result lattice
 	 */
-	virtual void GetLattice(kaldi::CompactLattice *clat) = 0;
+	virtual void GetLattice(kaldi::CompactLattice *clat, bool end_of_utterance) = 0;
 	/**
 	 * Clean all data
 	 */
@@ -100,7 +100,7 @@ protected:
 private:
 	fst::SymbolTable *word_syms_;
 
-	kaldi::int32 Decode(int bestCount, std::vector<DecodedData> *result);
+	kaldi::int32 Decode(bool end_of_utterance, int bestCount, std::vector<DecodedData> *result);
 
 	void GetRecognitionResult(DecodedData &input, RecognitionResult *output);
 	void GetRecognitionResult(vector<DecodedData> &input, vector<RecognitionResult> *output);

@@ -148,9 +148,8 @@ void Nnet3LatgenFasterDecoder::InputFinished()
 	decoder_->FinalizeDecoding();
 }
 
-void Nnet3LatgenFasterDecoder::GetLattice(kaldi::CompactLattice *clat)
+void Nnet3LatgenFasterDecoder::GetLattice(kaldi::CompactLattice *clat, bool end_of_utterance)
 {
-	bool end_of_utterance = true;
 	decoder_->GetLattice(end_of_utterance, clat);
 
 	// In an application you might avoid updating the adaptation state if
@@ -160,18 +159,6 @@ void Nnet3LatgenFasterDecoder::GetLattice(kaldi::CompactLattice *clat)
 	if (acoustic_scale_ != 0) {
 		ScaleLattice(fst::AcousticLatticeScale(1.0 / acoustic_scale_), clat);
 	}
-}
-
-int32 Nnet3LatgenFasterDecoder::DecodeIntermediate(int bestCount, vector<DecodedData> *result) {
-#ifdef DECODER_OPTS_PATCHED
-	int32 max_active = decoder_->getConfig().decoder_opts.max_active;
-	decoder_->getConfig().decoder_opts.max_active = 100;
-#endif
-	int32 returnValue = OnlineDecoder::DecodeIntermediate(bestCount, result);
-#ifdef DECODER_OPTS_PATCHED
-	decoder_->getConfig().decoder_opts.max_active = max_active;
-#endif
-	return returnValue;
 }
 
 } /* namespace apiai */

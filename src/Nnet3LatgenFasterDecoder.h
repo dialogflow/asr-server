@@ -36,10 +36,8 @@ protected:
 			const bool do_endpointing);
 	virtual void InputStarted();
 	virtual void InputFinished();
-	virtual void GetLattice(kaldi::CompactLattice *clat);
+	virtual void GetLattice(kaldi::CompactLattice *clat, bool end_of_utterance);
 	virtual void CleanUp();
-
-	virtual int32 DecodeIntermediate(int bestCount, vector<DecodedData> *result);
 private:
 	std::string nnet3_rxfilename_;
 

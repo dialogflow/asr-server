@@ -242,7 +242,7 @@ void OnlineDecoder::Decode(Request &request, Response &response) {
 
 		vector<DecodedData> result;
 
-		int32 decoded = Decode(request.BestCount(), &result);
+		int32 decoded = Decode(true, request.BestCount(), &result);
 
 		if (decoded == 0) {
 			response.SetError("Best-path failed");
@@ -263,12 +263,12 @@ void OnlineDecoder::Decode(Request &request, Response &response) {
 };
 
 int32 OnlineDecoder::DecodeIntermediate(int bestCount, vector<DecodedData> *result) {
-	return Decode(bestCount, result);
+	return Decode(false, bestCount, result);
 }
 
-int32 OnlineDecoder::Decode(int bestCount, vector<DecodedData> *result) {
+int32 OnlineDecoder::Decode(bool end_of_utterance, int bestCount, vector<DecodedData> *result) {
 	kaldi::CompactLattice clat;
-	GetLattice(&clat);
+	GetLattice(&clat, end_of_utterance);
 
 	if (clat.NumStates() == 0) {
 		return 0;
