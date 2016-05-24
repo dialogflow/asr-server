@@ -270,13 +270,13 @@ There are several parameters to tune up recognition process. All parameters are 
 	<tr>
 		<td>nbest</td>
 		<td>Set the number of possible returned values
-<pre>{<br>
-	"status":"ok",<br>
-	"data":[<br>
-		{"confidence":0.900359,"text":"HELLO WORLD"},<br>
-		{"confidence":0.89012,"text":"HELLO WORD"}<br>
-	]<br>
-}</pre>
+<pre><code>{
+	"status":"ok",
+	"data":[
+		{"confidence":0.900359,"text":"HELLO WORLD"},
+		{"confidence":0.89012,"text":"HELLO WORD"}
+	]
+}</code></pre>
 </td>
 		<td>1-10</td>
 		<td>1</td>
@@ -284,7 +284,8 @@ There are several parameters to tune up recognition process. All parameters are 
 	<tr>
 		<td>intermediate</td>
 		<td>Set time interval in milliseconds between intermediate results while 
-			recognition being in progress.<br>
+			recognition being in progress.
+
 			The result returned as an <a href="https://www.w3.org/Protocols/rfc1341/7_2_Multipart.html">
 			HTTP multipart response</a> with "content-type"
 			set to "multipart/x-mixed-replace" and each response part
@@ -292,27 +293,27 @@ There are several parameters to tune up recognition process. All parameters are 
 			Intermediate parts named as "partial" and a final part is named as "result".
 			Also each intermediate document have "status" field set to "intermediate",
 			last one will have "status" set to "ok".
-<pre>
---ResponseBoundary<br>
-Content-Disposition: form-data; name="partial"<br>
-Content-type: application/json<br>
-<br>
-{"status":"intermediate","data":[{"confidence":0.908981,"text":"HELLO"}]}<br>
-<br>
---ResponseBoundary<br>
-Content-Disposition: form-data; name="partial"<br>
-Content-type: application/json<br>
-<br>
-{"status":"intermediate","data":[{"confidence":0.903025,"text":"HELLO WORLD"}]}<br>
-<br>
+<pre><code>
 --ResponseBoundary
-Content-Disposition: form-data; name="result"<br>
-Content-type: application/json<br>
-<br>
-{"status":"ok","data":[{"confidence":0.903025,"text":"HELLO WORLD"}]}<br>
-<br>
+Content-Disposition: form-data; name="partial"
+Content-type: application/json
+
+{"status":"intermediate","data":[{"confidence":0.908981,"text":"HELLO"}]}
+
+--ResponseBoundary
+Content-Disposition: form-data; name="partial"
+Content-type: application/json
+
+{"status":"intermediate","data":[{"confidence":0.903025,"text":"HELLO WORLD"}]}
+
+--ResponseBoundary
+Content-Disposition: form-data; name="result"
+Content-type: application/json
+
+{"status":"ok","data":[{"confidence":0.903025,"text":"HELLO WORLD"}]}
+
 --ResponseBoundary--
-</pre>
+</code></pre>
 </td>
 		<td> >500</td>
 		<td>0</td>
@@ -325,12 +326,12 @@ Content-type: application/json<br>
 			to response: "interrupted" with value "endofspeech", and "time" with time point
 			showing the number of milliseconds have been processed.
 
-<pre>{<br>
-	"status":"ok",<br>
-	"data":[{"confidence":0.900359,"text":"HELLO WORLD"}],<br>
-	"interrupted":"endofspeech",<br>
-	"time":3800<br>
-}</pre>
+<pre><code>{
+	"status":"ok",
+	"data":[{"confidence":0.900359,"text":"HELLO WORLD"}],
+	"interrupted":"endofspeech",
+	"time":3800
+}</code></pre>
 </td>
 		<td>true or false</td>
 		<td>true</td>
