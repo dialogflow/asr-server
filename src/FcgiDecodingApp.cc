@@ -41,8 +41,17 @@ class ResponseParams {
 public:
 	bool multipart;
 
-	ResponseParams() : multipart(false) {};
+	static bool default_multipart;
+	static bool default_endofspeech;
+
+	ResponseParams() : multipart(default_multipart) {};
 };
+
+// Multipart option default value
+bool ResponseParams::default_multipart = false;
+
+// End-of-speech detection option default value
+bool ResponseParams::default_endofspeech = true;
 
 bool to_bool(std::string &str) {
     std::transform(str.begin(), str.end(), str.begin(), ::tolower);
@@ -86,6 +95,8 @@ void FcgiDecodingApp::RegisterOptions(kaldi::OptionsItf &po) {
     po.Register("fcgi-socket", &fcgi_socket_path_, "FastCGI connection string, if undefined then stdin and stdout will be used");
     po.Register("fcgi-socket.backlog", &fcgi_socket_backlog_, "FastCGI socket backlog size.");
     po.Register("fcgi-threads-number", &fcgi_threads_number_, "Number of FastCGI working threads");
+    po.Register("fcgi-multipart", &ResponseParams::default_multipart, "Enable or disable multipart responses by default");
+    po.Register("fcgi-endofspeech", &ResponseParams::default_endofspeech, "Enable or disable end-of-speech detection by default");
 }
 
 void *FcgiDecodingApp::RunChildThread(void *arg) {
@@ -116,8 +127,8 @@ void FcgiDecodingApp::ProcessingRoutine(Decoder &decoder) {
 
 	try {
 		RequestRawReader reader(&fcgiin);
-		// Let's enable it by default
-		reader.DoEndpointing(true);
+
+		reader.DoEndpointing(ResponseParams::default_endofspeech);
 
 		ResponseParams params;
 		apply_request_parameters(request, reader, params);
@@ -157,7 +168,6 @@ int FcgiDecodingApp::Run(int argc, char **argv) {
 		"--beam=15.0",
 		"--lattice-beam=6.0",
 		"--acoustic-scale=1.0",
-		"--do-endpointing=true",
 		"--endpoint.silence-phones=1",
 		"--endpoint.rule1.min-trailing-silence=0.5",
 		"--endpoint.rule2.min-trailing-silence=0.15",

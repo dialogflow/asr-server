@@ -47,11 +47,7 @@ protected:
 	virtual bool AcceptWaveform(kaldi::BaseFloat sampling_rate,
                     const kaldi::VectorBase<kaldi::BaseFloat> &waveform,
 					const bool do_endpointing) = 0;
-	/**
-	 * Process next data chunk
-	 */
-	bool AcceptWaveform(kaldi::BaseFloat sampling_rate,
-					const kaldi::VectorBase<kaldi::BaseFloat> &waveform);
+
 	/**
 	 * Preparare to decoding
 	 */

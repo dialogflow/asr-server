@@ -73,7 +73,6 @@ bool getWeightMeasures(const kaldi::Lattice &fst,
 OnlineDecoder::OnlineDecoder() {
 	lm_scale_ = 10;
 	chunk_length_secs_ = 0.18;
-	do_endpointing_ = false;
 	max_record_size_seconds_ = 0;
 	max_lattice_unchanged_interval_seconds_ = 0;
 	decoding_timeout_seconds_ = 0;
@@ -85,11 +84,6 @@ OnlineDecoder::OnlineDecoder() {
 OnlineDecoder::~OnlineDecoder() {
 }
 
-bool OnlineDecoder::AcceptWaveform(kaldi::BaseFloat sampling_rate,
-					const kaldi::VectorBase<kaldi::BaseFloat> &waveform)
-{
-	return AcceptWaveform(sampling_rate, waveform, do_endpointing_);
-}
 
 void OnlineDecoder::GetRecognitionResult(DecodedData &input, RecognitionResult *output) {
 	  // TODO move parameters to external file
@@ -125,8 +119,6 @@ void OnlineDecoder::RegisterOptions(kaldi::OptionsItf &po) {
     po.Register("word-symbol-table", &word_syms_rxfilename_,
                 "Symbol table for words [for debug output]");
     po.Register("fst-in", &fst_rxfilename_, "Path to FST model file");
-    po.Register("do-endpointing", &do_endpointing_,
-                "If true, apply endpoint detection");
     po.Register("lm-scale", &lm_scale_, "Scaling factor for LM probabilities. "
 				"Note: the ratio acoustic-scale/lm-scale is all that matters.");
 
@@ -173,7 +165,7 @@ void OnlineDecoder::Decode(Request &request, Response &response) {
 
 		kaldi::SubVector<kaldi::BaseFloat> *wave_part;
 
-		bool do_endpointing = do_endpointing_ && request.DoEndpointing();
+		bool do_endpointing = request.DoEndpointing();
 		std::string requestInterrupted = Response::NOT_INTERRUPTED;
 		int samples_left = (max_samples_limit > 0) ? std::min(max_samples_limit, samples_per_chunk) : samples_per_chunk;
 		const bool decoding_timeout_enabled = decoding_timeout_seconds_ > 0;
@@ -234,7 +226,7 @@ void OnlineDecoder::Decode(Request &request, Response &response) {
 		if (samp_counter < PAD_SIZE) {
 			KALDI_VLOG(1) << "Input too short, padding with " << (PAD_SIZE - samp_counter) << " zero samples";
 			kaldi::SubVector<kaldi::BaseFloat> padding(padVector, PAD_SIZE - samp_counter);
-			AcceptWaveform(request.Frequency(), padding);
+			AcceptWaveform(request.Frequency(), padding, false);
 		}
 
 		KALDI_VLOG(1) << "Input finished @ " << getMillisecondsSince(start_time) << " ms (audio length: " << (samp_counter / (request.Frequency() / 1000)) << " ms)";
