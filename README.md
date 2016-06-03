@@ -282,17 +282,47 @@ There are several parameters to tune up recognition process. All parameters are 
 		<td>1</td>
 	</tr>
 	<tr>
+		<td>endofspeech</td>
+		<td>Enable or disable end-of-speech points during recognition. If endpoint
+			detected all then current result have returned and the rest data would 
+			be skipped. Also in case of interrupted recognition 2 fields would be added
+			to response: "interrupted" with value "endofspeech", and "time" with time point
+			showing the number of milliseconds have been processed.
+
+<pre><code>{
+	"status":"ok",
+	"data":[{"confidence":0.900359,"text":"HELLO WORLD"}],
+	"interrupted":"endofspeech",
+	"time":3800
+}</code></pre>
+</td>
+		<td>true or false</td>
+		<td>true</td>
+	</tr>
+	<tr>
 		<td>intermediate</td>
 		<td>Set time interval in milliseconds between intermediate results while 
 			recognition being in progress.
 
-			The result returned as an <a href="https://www.w3.org/Protocols/rfc1341/7_2_Multipart.html">
+			The result returned as an simple sequence of JSON documents.
+			Each intermediate document have "status" field set to "intermediate",
+			last one will have "status" set to "ok".
+<pre><code>
+{"status":"intermediate","data":[{"confidence":0.908981,"text":"HELLO"}]}
+{"status":"intermediate","data":[{"confidence":0.903025,"text":"HELLO WORLD"}]}
+{"status":"ok","data":[{"confidence":0.903025,"text":"HELLO WORLD"}]}
+</code></pre>
+</td>
+		<td> >500</td>
+		<td>0</td>
+	</tr>
+	<tr>
+		<td>multipart</td>
+		<td>If enabled the result would be returned as an <a href="https://www.w3.org/Protocols/rfc1341/7_2_Multipart.html">
 			HTTP multipart response</a> with "content-type"
 			set to "multipart/x-mixed-replace" and each response part
 			has "Content-Disposition" header value equal to "form-data".
 			Intermediate parts named as "partial" and a final part is named as "result".
-			Also each intermediate document have "status" field set to "intermediate",
-			last one will have "status" set to "ok".
 <pre><code>
 --ResponseBoundary
 Content-Disposition: form-data; name="partial"
@@ -315,25 +345,7 @@ Content-type: application/json
 --ResponseBoundary--
 </code></pre>
 </td>
-		<td> >500</td>
-		<td>0</td>
-	</tr>
-	<tr>
-		<td>endofspeech</td>
-		<td>Enable or disable end-of-speech points during recognition. If endpoint
-			detected all then current result have returned and the rest data would 
-			be skipped. Also in case of interrupted recognition 2 fields would be added
-			to response: "interrupted" with value "endofspeech", and "time" with time point
-			showing the number of milliseconds have been processed.
-
-<pre><code>{
-	"status":"ok",
-	"data":[{"confidence":0.900359,"text":"HELLO WORLD"}],
-	"interrupted":"endofspeech",
-	"time":3800
-}</code></pre>
-</td>
 		<td>true or false</td>
-		<td>true</td>
+		<td>false</td>
 	</tr>
 </table>

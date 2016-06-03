@@ -35,6 +35,14 @@ namespace apiai {
 const std::string PARAMETER_NAME_NBEST = "nbest";
 const std::string PARAMETER_NAME_INTERMEDIATE = "intermediate";
 const std::string PARAMETER_NAME_END_OF_SPEECH = "endofspeech";
+const std::string PARAMETER_MULTIPART = "multipart";
+
+class ResponseParams {
+public:
+	bool multipart;
+
+	ResponseParams() : multipart(false) {};
+};
 
 bool to_bool(std::string &str) {
     std::transform(str.begin(), str.end(), str.begin(), ::tolower);
@@ -49,7 +57,7 @@ bool to_bool(const char *chars) {
     return to_bool(str);
 }
 
-void apply_request_parameters(FCGX_Request &request, RequestRawReader &reader) {
+void apply_request_parameters(FCGX_Request &request, RequestRawReader &reader, ResponseParams &params) {
 	char *queryString = FCGX_GetParam("QUERY_STRING", request.envp);
 	if (queryString) {
 		QueryStringParser queryStringParser(queryString);
@@ -64,6 +72,9 @@ void apply_request_parameters(FCGX_Request &request, RequestRawReader &reader) {
 			} else if (PARAMETER_NAME_END_OF_SPEECH == name) {
 				reader.DoEndpointing(to_bool(value.data()));
 				KALDI_VLOG(1) << "Setting end-of-speech: " << (reader.DoEndpointing() ? "enabled" : "disabled");
+			} else if (PARAMETER_MULTIPART == name) {
+				params.multipart = to_bool(value.data());
+				KALDI_VLOG(1) << "Setting multipart: " << (params.multipart ? "enabled" : "disabled");
 			} else {
 				KALDI_VLOG(1) << "Skipping unknown parameter \"" << name << "\"";
 			}
@@ -108,10 +119,11 @@ void FcgiDecodingApp::ProcessingRoutine(Decoder &decoder) {
 		// Let's enable it by default
 		reader.DoEndpointing(true);
 
-		apply_request_parameters(request, reader);
+		ResponseParams params;
+		apply_request_parameters(request, reader, params);
 
 		std::auto_ptr<ResponseJsonWriter> writer_ptr;
-		if (reader.IntermediateIntervalMillisec() > 0) {
+		if (params.multipart) {
 			writer_ptr.reset(new ResponseMultipartJsonWriter(&fcgiout));
 		} else {
 			writer_ptr.reset(new ResponseJsonWriter(&fcgiout));
