@@ -223,6 +223,10 @@ void OnlineDecoder::Decode(Request &request, Response &response) {
 			}
 		}
 
+		if (samp_counter == 0) {
+			throw std::runtime_error("Got no data");
+		}
+
 		if (samp_counter < PAD_SIZE) {
 			KALDI_VLOG(1) << "Input too short, padding with " << (PAD_SIZE - samp_counter) << " zero samples";
 			kaldi::SubVector<kaldi::BaseFloat> padding(padVector, PAD_SIZE - samp_counter);
