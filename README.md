@@ -1,8 +1,8 @@
 About
 ======
-FastCGI support for kaldi. It allows kaldi based speech recognition to be used though apache or nginx (or any other that support FastCGI) HTTP Servers. It also contains simple HTML based client, that allows to test kaldi speech recognition by microphone.
+FastCGI support for [Kaldi](http://kaldi-asr.org/doc/). It allows Kaldi based speech recognition to be used though Apache or Nginx (or any other that support FastCGI) HTTP servers. It also contains simple HTML-based client, that allows testing Kaldi speech recognitionfrom a web page.
 
-You can test it out here: https://asr-model-demo.api.ai/
+You can test it out here: https://api.ai/speech-recognition
 
 Licence
 -------
