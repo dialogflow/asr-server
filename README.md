@@ -308,9 +308,15 @@ There are several parameters to tune up recognition process. All parameters are 
 			Each intermediate document have "status" field set to "intermediate",
 			last one will have "status" set to "ok".
 <pre><code>
-{"status":"intermediate","data":[{"confidence":0.908981,"text":"HELLO"}]}
-{"status":"intermediate","data":[{"confidence":0.903025,"text":"HELLO WORLD"}]}
-{"status":"ok","data":[{"confidence":0.903025,"text":"HELLO WORLD"}]}
+{"status":"intermediate","data":[
+	{"confidence":0.908981,"text":"HELLO"}
+]}
+{"status":"intermediate","data":[
+	{"confidence":0.903025,"text":"HELLO WORLD"}
+]}
+{"status":"ok","data":[
+	{"confidence":0.903025,"text":"HELLO WORLD"}
+]}
 </code></pre>
 </td>
 		<td> >500</td>
@@ -328,19 +334,25 @@ There are several parameters to tune up recognition process. All parameters are 
 Content-Disposition: form-data; name="partial"
 Content-type: application/json
 
-{"status":"intermediate","data":[{"confidence":0.908981,"text":"HELLO"}]}
+{"status":"intermediate","data":[
+	{"confidence":0.908981,"text":"HELLO"}
+]}
 
 --ResponseBoundary
 Content-Disposition: form-data; name="partial"
 Content-type: application/json
 
-{"status":"intermediate","data":[{"confidence":0.903025,"text":"HELLO WORLD"}]}
+{"status":"intermediate","data":[
+	{"confidence":0.903025,"text":"HELLO WORLD"}
+]}
 
 --ResponseBoundary
 Content-Disposition: form-data; name="result"
 Content-type: application/json
 
-{"status":"ok","data":[{"confidence":0.903025,"text":"HELLO WORLD"}]}
+{"status":"ok","data":[
+	{"confidence":0.903025,"text":"HELLO WORLD"}
+]}
 
 --ResponseBoundary--
 </code></pre>
