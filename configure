@@ -26,6 +26,7 @@
 CONFIGURE_VERSION=1
 OUTPUT_MK=apiai.mk
 INCLUDE_PATHS="/usr/include /usr/local/include"
+LIBRARY_PATHS="/usr/lib /usr/local/lib /usr/local/lib64"
 
 APIAI_CXX_FLAGS=
 
@@ -104,15 +105,19 @@ function exit_success {
 }
 
 function check_sys_library {
-	echo -n "Looking for $1 library: "
-	local response=$(whereis lib$1)
-	local libpath=${response##*:}
-	if [ -z "$libpath" ]; then
-		echo "Not found"
-		failure "Library $1 not found"
-	else
-		echo $libpath
-	fi
+  for file in $1; do
+    for path in $LIBRARY_PATHS; do
+      local result="${path}/lib${file}"
+      echo -n "Checking ${result}..." >&2
+      if [ -f "$result" ]; then
+        echo "OK" >&2
+        echo $result
+        break 2
+      else
+        echo "Not found" >&2
+      fi
+    done
+  done
 }
 
 function check_header_file {
@@ -136,8 +141,8 @@ echo "Configuring ..."
 echo "Looking for Kaldi sources in \"$KALDIROOT\"..."
 check_exists "$KALDIROOT/src/kaldi.mk"
 
-check_sys_library fcgi
-check_sys_library fcgi++
+check_sys_library fcgi.a
+check_sys_library fcgi++.a
 
 FCGIO_H=$(check_header_file "fcgio.h")
 if [ -z "$FCGIO_H" ]; then
