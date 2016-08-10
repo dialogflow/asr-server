@@ -105,19 +105,34 @@ function exit_success {
 }
 
 function check_sys_library {
-  for file in $1; do
-    for path in $LIBRARY_PATHS; do
-      local result="${path}/lib${file}"
-      echo -n "Checking ${result}..." >&2
-      if [ -f "$result" ]; then
-        echo "OK" >&2
-        echo $result
-        break 2
+  case $(uname -s) in
+    Darwin)
+      for file in $1; do
+        for path in $LIBRARY_PATHS; do
+          local result="${path}/lib${file}.a"
+          echo -n "Checking ${result}..." >&2
+          if [ -f "$result" ]; then
+            echo "OK" >&2
+            echo $result
+            break 2
+          else
+            echo "Not found" >&2
+          fi
+        done
+      done
+    ;;
+    *)
+      echo -n "Looking for $1 library: "
+      local response=$(whereis lib$1)
+      local libpath=${response##*:}
+      if [ -z "$libpath" ]; then
+        echo "Not found"
+        failure "Library $1 not found"
       else
-        echo "Not found" >&2
+        echo $libpath
       fi
-    done
-  done
+    ;;
+  esac
 }
 
 function check_header_file {
@@ -141,8 +156,8 @@ echo "Configuring ..."
 echo "Looking for Kaldi sources in \"$KALDIROOT\"..."
 check_exists "$KALDIROOT/src/kaldi.mk"
 
-check_sys_library fcgi.a
-check_sys_library fcgi++.a
+check_sys_library fcgi
+check_sys_library fcgi++
 
 FCGIO_H=$(check_header_file "fcgio.h")
 if [ -z "$FCGIO_H" ]; then
