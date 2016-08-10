@@ -227,15 +227,12 @@ int FcgiDecodingApp::Run(int argc, char **argv) {
 
 		KALDI_VLOG(1) << "Threads ready: " << thread_list.size();
 
-		while (thread_list.size() > 0) {
-			sleep(1);
-			for (std::list<pthread_t>::iterator i = thread_list.begin(); i != thread_list.end(); i++) {
-				if (!pthread_tryjoin_np(*i, NULL)) {
-					thread_list.erase(i);
-					KALDI_VLOG(1) << "Thread finished, threads left: " << thread_list.size();
-				}
+		for (std::list<pthread_t>::iterator i = thread_list.begin(); i != thread_list.end(); ++i) {
+			if ((errnumber = pthread_join(*i, NULL)) != 0) {
+				KALDI_WARN << "Failed to join thread: " << strerror(errnumber);
 			}
 		}
+		KALDI_VLOG(1) << "Thread finished, threads left: " << thread_list.size();
 	}
 
 	running_ = false;
