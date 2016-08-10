@@ -67,7 +67,7 @@ if ! [ -x "$PWD/configure" ]; then
 fi
 
 ## Default locations for Kaldi sources.
-KALDIROOT=$(rel2abs ../kaldi-apiai)
+KALDIROOT=$(rel2abs ../kaldi)
 
 function usage {
   echo 'Usage: ./configure [--kaldi-root=KALDIROOT]';

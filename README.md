@@ -37,17 +37,15 @@ with HTTP server.
 
 ### Getting Kaldi
 
-As a first step you have to clone Kaldi source tree. Due to nnet3 support
-is currently under active development and not yet added to the origin 
-branch please use our branched off version available at 
-<https://github.com/api-ai/kaldi>:
+As a first step you have to clone Kaldi source tree available at
+<https://github.com/kaldi-asr/kaldi>:
 
-	git clone https://github.com/api-ai/kaldi kaldi-apiai
+	git clone https://github.com/kaldi-asr/kaldi
 
-This command will clone source tree to kaldi-apiai directory. 
-To configure and build Kaldi please refer to `kaldi-apiai/INSTALL` file.
+This command will clone source tree to `kaldi` directory. 
+To configure and build Kaldi please refer to `kaldi/INSTALL` file.
 For detailed information please look for Kaldi official instruction:
-<http://www.danielpovey.com/kaldi-docs/install.html>
+<http://kaldi-asr.org/doc/install.html>
 
 ### Installing libraries
 
@@ -88,7 +86,7 @@ by running a special utility:
 	$ ./configure
 
 It will check that all required libraries installed to your system and 
-also will look for Kaldi libraries in ../kaldi-apiai folder. If you 
+also will look for Kaldi libraries in `../kaldi` folder. If you 
 have Kaldi installed somewhere else you may explicitly pass the 
 path via --kaldi-root option:
 
