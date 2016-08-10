@@ -31,8 +31,14 @@ APIAI_CXX_FLAGS=
 
 function rel2abs {
   if [ ! -z "$1" ]; then
-    local retval=$(readlink -f $1)
-    echo $retval
+    case "${1}" in
+      [./]*)
+      echo "$(cd ${1%/*}; pwd)/${1##*/}"
+      ;;
+      *)
+      echo "${PWD}/${1}"
+      ;;
+    esac
   fi
 }
 
@@ -60,7 +66,7 @@ if ! [ -x "$PWD/configure" ]; then
 fi
 
 ## Default locations for Kaldi sources.
-KALDIROOT=$(readlink -f ../kaldi-apiai)
+KALDIROOT=$(rel2abs ../kaldi-apiai)
 
 function usage {
   echo 'Usage: ./configure [--kaldi-root=KALDIROOT]';
