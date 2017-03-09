@@ -22,6 +22,7 @@ Nnet3LatgenFasterDecoder::Nnet3LatgenFasterDecoder() {
 	decode_fst_ = NULL;
 	trans_model_ = NULL;
 	nnet_ = NULL;
+    decodable_info_ = NULL;    
 	feature_info_ = NULL;
 	nnet3_rxfilename_ = "final.mdl";
 }
@@ -30,6 +31,7 @@ Nnet3LatgenFasterDecoder::~Nnet3LatgenFasterDecoder() {
 	delete decode_fst_;
 	delete trans_model_;
 	delete nnet_;
+    delete decodable_info_;   
 	delete feature_info_;
 }
 
@@ -53,7 +55,8 @@ void Nnet3LatgenFasterDecoder::RegisterOptions(kaldi::OptionsItf &po) {
                 "--chunk-length=-1.");
 
     feature_config_.Register(&po);
-    nnet3_decoding_config_.Register(&po);
+    decoder_opts_.Register(&po);
+    decodable_opts_.Register(&po);
     endpoint_config_.Register(&po);
 }
 
@@ -79,13 +82,19 @@ bool Nnet3LatgenFasterDecoder::Initialize(kaldi::OptionsItf &po) {
     }
 
     trans_model_ = new kaldi::TransitionModel();
-    nnet_ = new kaldi::nnet3::AmNnetSimple();
+    nnet_ = new kaldi::nnet3::AmNnetSimple();      
     {
       bool binary;
       kaldi::Input ki(nnet3_rxfilename_, &binary);
       trans_model_->Read(ki.Stream(), binary);
       nnet_->Read(ki.Stream(), binary);
     }
+
+    // this object contains precomputed stuff that is used by all decodable
+    // objects.  It takes a pointer to nnet_ because if it has iVectors it has
+    // to modify the nnet to accept iVectors at intervals.
+    decodable_info_ = new kaldi::nnet3::DecodableNnetSimpleLoopedInfo(     
+                            decodable_opts_, nnet_);
 
     decode_fst_ = fst::ReadFstKaldi(fst_rxfilename_);
 
@@ -95,7 +104,7 @@ bool Nnet3LatgenFasterDecoder::Initialize(kaldi::OptionsItf &po) {
         KALDI_ERR << "Could not read symbol table from file "
                   << word_syms_rxfilename_;
 
-    acoustic_scale_ = nnet3_decoding_config_.decodable_opts.acoustic_scale;
+    acoustic_scale_ = decodable_opts_.acoustic_scale;                          
 
     return true;
 }
@@ -107,9 +116,9 @@ void Nnet3LatgenFasterDecoder::InputStarted()
 	feature_pipeline_ = new kaldi::OnlineNnet2FeaturePipeline (*feature_info_);
 	feature_pipeline_->SetAdaptationState(*adaptation_state_);
 
-	decoder_ = new kaldi::SingleUtteranceNnet3Decoder(nnet3_decoding_config_,
+	decoder_ = new kaldi::SingleUtteranceNnet3Decoder(decoder_opts_,
 										*trans_model_,
-										*nnet_,
+										*decodable_info_,
 										*decode_fst_,
 										feature_pipeline_);
 }

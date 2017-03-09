@@ -105,7 +105,7 @@ void OnlineDecoder::GetRecognitionResult(DecodedData &input, RecognitionResult *
 	  output->text = outss.str();
 }
 
-void OnlineDecoder::GetRecognitionResult(vector<DecodedData> &input, vector<RecognitionResult> *output) {
+void OnlineDecoder::GetRecognitionResult(std::vector<DecodedData> &input, std::vector<RecognitionResult> *output) {
 	for (int i = 0; i < input.size(); i++) {
 		RecognitionResult result;
 		GetRecognitionResult(input.at(i), &result);
@@ -194,7 +194,7 @@ void OnlineDecoder::Decode(Request &request, Response &response) {
 
 			if ((intermediate_samples_interval > 0) && (samp_counter > (intermediate_samples_interval * intermediate_counter))) {
 				intermediate_counter++;
-				vector<DecodedData> decodeData;
+				std::vector<DecodedData> decodeData;
 				if (DecodeIntermediate(1, &decodeData) > 0) {
 					DecodedData &data = decodeData.at(0);
 					if (!wordsEquals(prev_words, data.words)) {
@@ -236,7 +236,7 @@ void OnlineDecoder::Decode(Request &request, Response &response) {
 		KALDI_VLOG(1) << "Input finished @ " << getMillisecondsSince(start_time) << " ms (audio length: " << (samp_counter / (request.Frequency() / 1000)) << " ms)";
 		InputFinished();
 
-		vector<DecodedData> result;
+		std::vector<DecodedData> result;
 
 		int32 decoded = Decode(true, request.BestCount(), &result);
 
@@ -244,7 +244,7 @@ void OnlineDecoder::Decode(Request &request, Response &response) {
 			response.SetError("Best-path failed");
 			KALDI_WARN << "Best-path failed";
 		} else {
-			vector<RecognitionResult> recognitionResults;
+			std::vector<RecognitionResult> recognitionResults;
 			GetRecognitionResult(result, &recognitionResults);
 			response.SetResult(recognitionResults, requestInterrupted, (samp_counter / (request.Frequency() / 1000)));
 			KALDI_VLOG(1) << "Recognized @ " << getMillisecondsSince(start_time) << " ms";
@@ -258,11 +258,11 @@ void OnlineDecoder::Decode(Request &request, Response &response) {
 	}
 };
 
-int32 OnlineDecoder::DecodeIntermediate(int bestCount, vector<DecodedData> *result) {
+int32 OnlineDecoder::DecodeIntermediate(int bestCount, std::vector<DecodedData> *result) {
 	return Decode(false, bestCount, result);
 }
 
-int32 OnlineDecoder::Decode(bool end_of_utterance, int bestCount, vector<DecodedData> *result) {
+int32 OnlineDecoder::Decode(bool end_of_utterance, int bestCount, std::vector<DecodedData> *result) {
 	kaldi::CompactLattice clat;
 	GetLattice(&clat, end_of_utterance);
 

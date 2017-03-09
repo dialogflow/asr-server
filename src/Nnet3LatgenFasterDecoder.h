@@ -17,7 +17,7 @@
 #define APIAI_DECODER_NNET3LATGENFASTERDECODER_H_
 
 #include "OnlineDecoder.h"
-#include "online2/online-nnet3-decoding.h"
+#include "online2/online-nnet3-decoding.h"          
 #include "online2/online-nnet2-feature-pipeline.h"
 
 namespace apiai {
@@ -47,13 +47,14 @@ private:
     // feature_config includes configuration for the iVector adaptation,
     // as well as the basic features.
     kaldi::OnlineNnet2FeaturePipelineConfig feature_config_;
-    kaldi::OnlineNnet3DecodingConfig nnet3_decoding_config_;
+    kaldi::nnet3::NnetSimpleLoopedComputationOptions decodable_opts_;  
+    kaldi::LatticeFasterDecoderConfig decoder_opts_;                   
 
     kaldi::OnlineNnet2FeaturePipelineInfo *feature_info_;
     fst::Fst<fst::StdArc> *decode_fst_;
     kaldi::TransitionModel *trans_model_;
     kaldi::nnet3::AmNnetSimple *nnet_;
-
+    kaldi::nnet3::DecodableNnetSimpleLoopedInfo *decodable_info_;     
 
     kaldi::OnlineIvectorExtractorAdaptationState *adaptation_state_;
     kaldi::OnlineNnet2FeaturePipeline *feature_pipeline_;
