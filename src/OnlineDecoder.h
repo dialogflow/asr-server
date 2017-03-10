@@ -99,7 +99,7 @@ private:
 	kaldi::int32 Decode(bool end_of_utterance, int bestCount, std::vector<DecodedData> *result);
 
 	void GetRecognitionResult(DecodedData &input, RecognitionResult *output);
-	void GetRecognitionResult(vector<DecodedData> &input, vector<RecognitionResult> *output);
+	void GetRecognitionResult(std::vector<DecodedData> &input, std::vector<RecognitionResult> *output);
 };
 
 } /* namespace apiai */
