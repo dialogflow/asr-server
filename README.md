@@ -110,7 +110,7 @@ by training a neural network with your personal data set or use a
 pretrained network provided by us. Currently it is only English model available
 at <https://api.ai/downloads/api.ai-kaldi-asr-model.zip>. 
 
-	$ wget https://api.ai/downloads/api.ai-kaldi-asr-model.zip
+	$ wget http://static.api.ai/downloads/api.ai-kaldi-asr-model.zip
 
 Unzip the archive to `asr-server` directory.
 
