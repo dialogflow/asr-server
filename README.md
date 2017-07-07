@@ -108,9 +108,9 @@ Return to your working directory where you put Kaldi sources
 Builded ASR application uses a Kaldi nnet3 models, which you can get
 by training a neural network with your personal data set or use a 
 pretrained network provided by us. Currently it is only English model available
-at <https://api.ai/downloads/api.ai-kaldi-asr-model.zip>. 
+at <https://github.com/api-ai/api-ai-english-asr-model/releases/download/1.0/api.ai-kaldi-asr-model.zip>. 
 
-	$ wget http://static.api.ai/downloads/api.ai-kaldi-asr-model.zip
+	$ wget https://github.com/api-ai/api-ai-english-asr-model/releases/download/1.0/api.ai-kaldi-asr-model.zip
 
 Unzip the archive to `asr-server` directory.
 
