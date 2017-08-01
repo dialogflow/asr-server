@@ -170,4 +170,9 @@ void Nnet3LatgenFasterDecoder::GetLattice(kaldi::CompactLattice *clat, bool end_
 	}
 }
 
+
+int32 Nnet3LatgenFasterDecoder::NumFramesDecoded() const {
+    return decoder_->NumFramesDecoded();
+}
+
 } /* namespace apiai */

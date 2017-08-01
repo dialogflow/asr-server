@@ -68,6 +68,10 @@ protected:
 	 * Calculate intermediate results
 	 */
 	virtual kaldi::int32 DecodeIntermediate(int bestCount, std::vector<DecodedData> *result);
+    /**
+     * Return the number of frames decoded thus far
+     */
+    virtual int32 NumFramesDecoded() const = 0;
 
 	std::string word_syms_rxfilename_;
 	kaldi::BaseFloat chunk_length_secs_;
