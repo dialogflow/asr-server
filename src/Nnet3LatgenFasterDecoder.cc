@@ -96,7 +96,7 @@ bool Nnet3LatgenFasterDecoder::Initialize(kaldi::OptionsItf &po) {
     decodable_info_ = new kaldi::nnet3::DecodableNnetSimpleLoopedInfo(     
                             decodable_opts_, nnet_);
 
-    decode_fst_ = fst::ReadFstKaldi(fst_rxfilename_);
+    decode_fst_ = fst::ReadFstKaldiGeneric(fst_rxfilename_);
 
     fst::SymbolTable *word_syms = NULL;
     if (word_syms_rxfilename_ != "")
