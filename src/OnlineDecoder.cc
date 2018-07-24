@@ -173,7 +173,6 @@ void OnlineDecoder::Decode(Request &request, Response &response) {
 
 		int time_left_ms = decoding_timeout_ms;
 		while ((wave_part = request.NextChunk(samples_left, time_left_ms)) != NULL) {
-
 			samp_counter += wave_part->Dim();
 
 			if (AcceptWaveform(request.Frequency(), *wave_part, do_endpointing) == false && do_endpointing) {
@@ -192,7 +191,9 @@ void OnlineDecoder::Decode(Request &request, Response &response) {
 				samples_left = std::min(max_samples_limit - samp_counter, samples_per_chunk);
 			}
 
-			if ((intermediate_samples_interval > 0) && (samp_counter > (intermediate_samples_interval * intermediate_counter))) {
+			if ((intermediate_samples_interval > 0)
+                && (samp_counter > (intermediate_samples_interval * intermediate_counter))
+                && NumFramesDecoded() > 0) {
 				intermediate_counter++;
 				std::vector<DecodedData> decodeData;
 				if (DecodeIntermediate(1, &decodeData) > 0) {

@@ -38,6 +38,7 @@ protected:
 	virtual void InputFinished();
 	virtual void GetLattice(kaldi::CompactLattice *clat, bool end_of_utterance);
 	virtual void CleanUp();
+    virtual int32 NumFramesDecoded() const;
 private:
 	std::string nnet3_rxfilename_;
 
