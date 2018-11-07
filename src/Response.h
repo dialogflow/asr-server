@@ -33,6 +33,9 @@ struct RecognitionResult {
 	 * Recognition result text
 	 */
 	std::string text;
+
+  // The confidences for the reference words
+  std::string ref_conf;
 };
 
 /**

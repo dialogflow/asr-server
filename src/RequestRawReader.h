@@ -47,6 +47,7 @@ public:
 		bestCount_ = 1;
 		intermediateMillisecondsInterval_ = 0;
 		doEndpointing_ = false;
+        phrase_id = "";
 	}
 
 	virtual ~RequestRawReader() {
@@ -75,6 +76,7 @@ public:
 
 	virtual kaldi::SubVector<kaldi::BaseFloat> *NextChunk(kaldi::int32 samples_count);
 	virtual kaldi::SubVector<kaldi::BaseFloat> *NextChunk(kaldi::int32 samples_count, kaldi::int32 timeout_ms);
+  //std::string phrase_id;
 private:
 	bool fail_;
 	kaldi::int32 frequency_;

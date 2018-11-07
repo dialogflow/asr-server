@@ -14,12 +14,13 @@
 // limitations under the License.
 
 #include "ResponseJsonWriter.h"
-
+#include <iostream>
 namespace apiai {
 
 const std::string ResponseJsonWriter::MIME_APPLICATION_JAVA = "application/json";
 
 void ResponseJsonWriter::SendJson(std::string json, bool final) {
+  // std::cerr << "Sending '" << json << "'...\n";
 	*out_ << json << std::endl;
 	out_->flush();
 }
@@ -40,6 +41,7 @@ void ResponseJsonWriter::SetResult(std::vector<RecognitionResult> &data, const s
 	std::ostringstream msg;
 	msg << "{";
 	msg << "\"status\":\"ok\"";
+	msg << ",\"ref-conf\":" << data[0].ref_conf;
 	msg << ",\"data\":[";
 	for (int i = 0; i < data.size(); i++) {
 		if (i) {

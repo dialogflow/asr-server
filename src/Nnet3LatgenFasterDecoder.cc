@@ -14,6 +14,24 @@
 // limitations under the License.
 
 #include "Nnet3LatgenFasterDecoder.h"
+#include "base/kaldi-common.h"
+#include "util/common-utils.h"
+#include "tree/context-dep.h"
+#include "hmm/transition-model.h"
+#include "fstext/fstext-lib.h"
+#include "nnet3/nnet-am-decodable-simple.h"
+#include "nnet3/nnet-utils.h"
+
+// Checks if a path is a directory
+// works on linux
+/*static bool is_directory(std::string path) {
+  struct stat st;
+  if (stat(path.c_str(), &st) == 0)
+    return S_ISDIR(st.st_mode);  // s.st_mode & S_IFDIR
+
+  return false;
+  }*/
+using namespace kaldi;
 
 namespace apiai {
 
@@ -22,7 +40,7 @@ Nnet3LatgenFasterDecoder::Nnet3LatgenFasterDecoder() {
 	decode_fst_ = NULL;
 	trans_model_ = NULL;
 	nnet_ = NULL;
-    decodable_info_ = NULL;    
+    decodable_info_ = NULL;
 	feature_info_ = NULL;
 	nnet3_rxfilename_ = "final.mdl";
 }
@@ -31,7 +49,7 @@ Nnet3LatgenFasterDecoder::~Nnet3LatgenFasterDecoder() {
 	delete decode_fst_;
 	delete trans_model_;
 	delete nnet_;
-    delete decodable_info_;   
+    delete decodable_info_;
 	delete feature_info_;
 }
 
@@ -82,21 +100,32 @@ bool Nnet3LatgenFasterDecoder::Initialize(kaldi::OptionsItf &po) {
     }
 
     trans_model_ = new kaldi::TransitionModel();
-    nnet_ = new kaldi::nnet3::AmNnetSimple();      
+    nnet_ = new kaldi::nnet3::AmNnetSimple();
     {
       bool binary;
       kaldi::Input ki(nnet3_rxfilename_, &binary);
       trans_model_->Read(ki.Stream(), binary);
       nnet_->Read(ki.Stream(), binary);
+      SetBatchnormTestMode(true, &(nnet_->GetNnet()));
+      SetDropoutTestMode(true, &(nnet_->GetNnet()));
+      CollapseModel(nnet3::CollapseModelConfig(), &(nnet_->GetNnet()));
     }
 
+    frame_shift_ = feature_info_->mfcc_opts.frame_opts.frame_shift_ms / 1000.0
+        * decodable_opts_.frame_subsampling_factor;
     // this object contains precomputed stuff that is used by all decodable
     // objects.  It takes a pointer to nnet_ because if it has iVectors it has
     // to modify the nnet to accept iVectors at intervals.
-    decodable_info_ = new kaldi::nnet3::DecodableNnetSimpleLoopedInfo(     
+    decodable_info_ = new kaldi::nnet3::DecodableNnetSimpleLoopedInfo(
                             decodable_opts_, nnet_);
 
-    decode_fst_ = fst::ReadFstKaldiGeneric(fst_rxfilename_);
+    if (!fst_rxfilename_.empty())  // this will be the default decoding graph
+      decode_fst_ = fst::ReadFstKaldiGeneric(fst_rxfilename_);
+    else {
+      decode_fst_ = NULL;
+      KALDI_WARN << "No default decoding graph provided. Default decoding "
+                 << "- i.e., when no phrase id is given - won't be supported.";
+    }
 
     fst::SymbolTable *word_syms = NULL;
     if (word_syms_rxfilename_ != "")
@@ -104,7 +133,7 @@ bool Nnet3LatgenFasterDecoder::Initialize(kaldi::OptionsItf &po) {
         KALDI_ERR << "Could not read symbol table from file "
                   << word_syms_rxfilename_;
 
-    acoustic_scale_ = decodable_opts_.acoustic_scale;                          
+    acoustic_scale_ = decodable_opts_.acoustic_scale;
 
     return true;
 }
@@ -116,11 +145,22 @@ void Nnet3LatgenFasterDecoder::InputStarted()
 	feature_pipeline_ = new kaldi::OnlineNnet2FeaturePipeline (*feature_info_);
 	feature_pipeline_->SetAdaptationState(*adaptation_state_);
 
-	decoder_ = new kaldi::SingleUtteranceNnet3Decoder(decoder_opts_,
-										*trans_model_,
-										*decodable_info_,
-										*decode_fst_,
-										feature_pipeline_);
+    if (req_ && !req_->phrase_id.empty() &&
+        decode_graphs_->find(req_->phrase_id) != decode_graphs_->end()) {
+      KALDI_LOG << "Using the special graph for phrase: " << req_->phrase_id;
+      decoder_ = new kaldi::SingleUtteranceNnet3Decoder(decoder_opts_,
+                                                        *trans_model_,
+                                                        *decodable_info_,
+                                                        *(decode_graphs_->at(req_->phrase_id)),
+                                                        feature_pipeline_);
+    } else {
+      KALDI_LOG << "Using the default decoding graph...";
+      decoder_ = new kaldi::SingleUtteranceNnet3Decoder(decoder_opts_,
+                                                        *trans_model_,
+                                                        *decodable_info_,
+                                                        *decode_fst_,
+                                                        feature_pipeline_);
+    }
 }
 
 

@@ -51,6 +51,8 @@ public:
 	 * Read timeout specified by timeout_ms.
 	 */
 	virtual kaldi::SubVector<kaldi::BaseFloat> *NextChunk(kaldi::int32 samples_count, kaldi::int32 timeout_ms) = 0;
+  std::string phrase_id;
+  bool provide_times = true;
 };
 
 } /* namespace apiai */

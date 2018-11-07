@@ -13,8 +13,11 @@
 // See the Apache 2 License for the specific language governing permissions and
 // limitations under the License.
 
+#include <iomanip>
 #include "OnlineDecoder.h"
 #include "Timing.h"
+
+using namespace kaldi;
 
 namespace apiai {
 
@@ -27,6 +30,7 @@ struct OnlineDecoder::DecodedData {
 	std::vector<int32> words;
 	std::vector<int32> alignment;
 	std::vector<kaldi::LatticeWeight> weights;
+  std::string text, ref_conf;
 };
 
 bool wordsEquals(std::vector<int32> &a, std::vector<int32> &b) {
@@ -71,7 +75,7 @@ bool getWeightMeasures(const kaldi::Lattice &fst,
 
 
 OnlineDecoder::OnlineDecoder() {
-	lm_scale_ = 10;
+	lm_scale_ = 1;
 	chunk_length_secs_ = 0.18;
 	max_record_size_seconds_ = 0;
 	max_lattice_unchanged_interval_seconds_ = 0;
@@ -89,7 +93,7 @@ void OnlineDecoder::GetRecognitionResult(DecodedData &input, RecognitionResult *
 	  // TODO move parameters to external file
 	  output->confidence = std::max(0.0, std::min(1.0, -0.0001466488 * (2.388449*float(input.weight.Value1()) + float(input.weight.Value2())) / (input.words.size() + 1) + 0.956));
 
-	  std::ostringstream outss;
+	  /*std::ostringstream outss;
 
 	  for (size_t i = 0; i < input.words.size(); i++) {
 		if (i) {
@@ -102,7 +106,10 @@ void OnlineDecoder::GetRecognitionResult(DecodedData &input, RecognitionResult *
 			outss << s;
 		}
 	  }
-	  output->text = outss.str();
+	  output->text = outss.str();*/
+      output->ref_conf = input.ref_conf;
+      output->text = input.text;
+      //KALDI_LOG << "text: " << input.text;
 }
 
 void OnlineDecoder::GetRecognitionResult(std::vector<DecodedData> &input, std::vector<RecognitionResult> *output) {
@@ -118,7 +125,7 @@ void OnlineDecoder::RegisterOptions(kaldi::OptionsItf &po) {
                 "Length of chunk size in seconds, that we process.");
     po.Register("word-symbol-table", &word_syms_rxfilename_,
                 "Symbol table for words [for debug output]");
-    po.Register("fst-in", &fst_rxfilename_, "Path to FST model file");
+    po.Register("default-graph", &fst_rxfilename_, "Path to FST model file");
     po.Register("lm-scale", &lm_scale_, "Scaling factor for LM probabilities. "
 				"Note: the ratio acoustic-scale/lm-scale is all that matters.");
 
@@ -131,9 +138,62 @@ void OnlineDecoder::RegisterOptions(kaldi::OptionsItf &po) {
 
     po.Register("decoding-timeout", &decoding_timeout_seconds_,
     		"Decoding process timeout given in seconds. Timeout disabled if value is non-positive.");
+
+     /// amira
+    po.Register("graph-list", &graph_list_file_,
+                "Path to text file which lists all the decoding graphs");
+    po.Register("trans-list", &trans_list_file_,
+                "Path to text file which lists all the ref transcriptions");
+    wbi_opts_.Register(&po);
+    po.Register("word-boundary-info", &word_boundary_rxfilename_,
+                "Word boundary info file");
+    po.Register("default-word-symbol-table", &default_word_syms_rxfilename_,
+                "The default symbol table for words.");
+
 }
 
 bool OnlineDecoder::Initialize(kaldi::OptionsItf &po) {
+
+
+    /// amira
+    if (!graph_list_file_.empty()) {
+      KALDI_LOG << "Graph list file provided. Will load all the graphs and "
+                << "ref transcriptions...";
+      KALDI_ASSERT(!trans_list_file_.empty());
+      SequentialTableReader<fst::VectorFstHolder> fst_reader(graph_list_file_);
+      RandomAccessInt32VectorReader transcript_reader(trans_list_file_);
+      KALDI_ASSERT(decode_graphs_ == NULL);
+      decode_graphs_ = new
+          std::unordered_map<std::string, fst::Fst<fst::StdArc>* >();
+      ref_texts_ = new std::unordered_map<std::string, std::vector<int32> >();
+      int num_success = 0, num_fail = 0;
+      for (; !fst_reader.Done(); fst_reader.Next()) {
+        std::string utt = fst_reader.Key();
+        if (!transcript_reader.HasKey(utt)) {
+          KALDI_LOG << "Warning: No transcription was found for phrase-id "
+                    << utt;
+          num_fail++;
+          continue;
+        }
+        fst::Fst<fst::StdArc> *graph = new fst::VectorFst<fst::StdArc>(
+            fst_reader.Value());
+        decode_graphs_->insert({utt, graph});
+        ref_texts_->insert({utt, transcript_reader.Value(utt)});
+        num_success++;
+      }
+      //for (; !transcript_reader.Done(); transcript_reader.Next()) {
+      //  std::string key = transcript_reader.Key();
+      //  const std::vector<int32> &transcript = transcript_reader.Value();
+      //}
+      KALDI_LOG << "Loaded " << num_success << " graphs and ref transcripts. "
+                << "Failed for " << num_fail;
+    }
+    if (!word_boundary_rxfilename_.empty())
+      word_boundary_info_ = new WordBoundaryInfo(wbi_opts_,
+                                                 word_boundary_rxfilename_);
+    else
+      KALDI_WARN << "Word boundary info needed for confidences...";
+
 	word_syms_ = NULL;
 	if (word_syms_rxfilename_ == "") {
 		return false;
@@ -142,20 +202,34 @@ bool OnlineDecoder::Initialize(kaldi::OptionsItf &po) {
 		KALDI_ERR << "Could not read symbol table from file "
 			  << word_syms_rxfilename_;
 	}
-	return true;
+
+    if (default_word_syms_rxfilename_.empty()) {
+      KALDI_WARN << "No default word list provided. Default graph decoding won't work...";
+
+    } else if (!(default_word_syms_ = fst::SymbolTable::ReadText(default_word_syms_rxfilename_))) {
+      KALDI_ERR << "Could not read the default symbol table from file "
+                << default_word_syms_rxfilename_;
+    }
+
+    return true;
 }
 
 void OnlineDecoder::Decode(Request &request, Response &response) {
 	try {
+      req_ = &request;
 		KALDI_ASSERT(request.Frequency() == AUDIO_DATA_FREQUENCY);
 		milliseconds_t start_time = getMilliseconds();
 		milliseconds_t progress_time = 0;
 
 		KALDI_VLOG(1) << "Started @ " << start_time << " ms";
+        KALDI_LOG << "Request.phrase-id: " << request.phrase_id;
 		InputStarted();
 
 		int intermediate_counter = 1;
 		int intermediate_samples_interval = request.IntermediateIntervalMillisec() > 0 ? request.IntermediateIntervalMillisec() * (request.Frequency() / 1000) : 0;
+		int intermediate_frames_interval = request.IntermediateIntervalMillisec() > 0 ?
+            request.IntermediateIntervalMillisec() / 1000 * frame_shift_ : 0;
+        int prev_frames = 0;
 		int max_samples_limit = max_record_size_seconds_ > 0 ? max_record_size_seconds_ * request.Frequency() : 0;
 
 		std::vector<int32> prev_words;
@@ -165,7 +239,7 @@ void OnlineDecoder::Decode(Request &request, Response &response) {
 
 		kaldi::SubVector<kaldi::BaseFloat> *wave_part;
 
-		bool do_endpointing = request.DoEndpointing();
+		bool do_endpointing = !request.DoEndpointing();
 		std::string requestInterrupted = Response::NOT_INTERRUPTED;
 		int samples_left = (max_samples_limit > 0) ? std::min(max_samples_limit, samples_per_chunk) : samples_per_chunk;
 		const bool decoding_timeout_enabled = decoding_timeout_seconds_ > 0;
@@ -197,12 +271,13 @@ void OnlineDecoder::Decode(Request &request, Response &response) {
 				std::vector<DecodedData> decodeData;
 				if (DecodeIntermediate(1, &decodeData) > 0) {
 					DecodedData &data = decodeData.at(0);
-					if (!wordsEquals(prev_words, data.words)) {
+                    //					if (!wordsEquals(prev_words, data.words)) {
+                    //KALDI_LOG << "Calling SetIntermediateResult...";
 						RecognitionResult recognitionResult;
 						GetRecognitionResult(data, &recognitionResult);
 						response.SetIntermediateResult(recognitionResult, (samp_counter / (request.Frequency() / 1000)));
 						prev_words = data.words;
-					}
+                        //}
 				} else {
 					prev_words.clear();
 				}
@@ -263,6 +338,7 @@ int32 OnlineDecoder::DecodeIntermediate(int bestCount, std::vector<DecodedData> 
 }
 
 int32 OnlineDecoder::Decode(bool end_of_utterance, int bestCount, std::vector<DecodedData> *result) {
+    KALDI_LOG << "Decoding lattice...end of utt: " << end_of_utterance;
 	kaldi::CompactLattice clat;
 	GetLattice(&clat, end_of_utterance);
 
@@ -273,6 +349,16 @@ int32 OnlineDecoder::Decode(bool end_of_utterance, int bestCount, std::vector<De
 	if (lm_scale_ != 0) {
 		fst::ScaleLattice(fst::LatticeScale(lm_scale_, 1.0), &clat);
 	}
+
+    fst::SymbolTable *wordsyms;
+    if (req_ && !req_->phrase_id.empty() &&
+        ref_texts_->find(req_->phrase_id) != ref_texts_->end()) {
+      KALDI_LOG << "Using the special word list for transcribing...";
+      wordsyms = word_syms_;
+    } else {
+      wordsyms = default_word_syms_;
+      KALDI_LOG << "Using the generic (default) word list for transcribing...";
+    }
 
 	int32 resultsNumber = 0;
 
@@ -295,7 +381,7 @@ int32 OnlineDecoder::Decode(bool end_of_utterance, int bestCount, std::vector<De
 		  }
 		}
 	} else {
-		kaldi::CompactLattice best_path_clat;
+      /*kaldi::CompactLattice best_path_clat;
 		kaldi::CompactLatticeShortestPath(clat, &best_path_clat);
 
 		kaldi::Lattice best_path_lat;
@@ -304,8 +390,66 @@ int32 OnlineDecoder::Decode(bool end_of_utterance, int bestCount, std::vector<De
 		GetLinearSymbolSequence(best_path_lat, &(decodeData.alignment), &(decodeData.words), &(decodeData.weight));
 		getWeightMeasures(best_path_lat, &(decodeData.weights));
 		result->push_back(decodeData);
-		resultsNumber = 1;
+		resultsNumber = 1;*/
+
+        int32 max_states = 1000 + 10 * clat.NumStates();
+        CompactLattice clat_ali;
+        WordAlignLattice(clat, *trans_model_, *word_boundary_info_,
+                         max_states, &clat_ali);
+        MinimumBayesRisk mbr(clat_ali);
+        const std::vector<BaseFloat> &conf = mbr.GetOneBestConfidences();
+        const std::vector<std::pair<BaseFloat, BaseFloat> > &times =
+            mbr.GetOneBestTimes();
+        const std::vector<int32> &words = mbr.GetOneBest();
+        std::ostringstream ss;
+        for (size_t i = 0; i < conf.size(); i++) {
+          std::string s = wordsyms->Find(words[i]);
+          if (req_->provide_times)
+            ss << s << "(" << conf[i] << ")[" << std::fixed
+               << std::setprecision(2) << times[i].first * frame_shift_
+               << "," << times[i].second * frame_shift_ << "] ";
+          else
+            ss << s << "(" << conf[i] << ") ";
+        }
+        resultsNumber = 1;
+        DecodedData decode_data;
+        decode_data.text = ss.str();
+        result->push_back(decode_data);
+        KALDI_LOG << "Decoded: " << ss.str();
 	}
+
+    // ref-conf example: [ ["he", 1], ["lived", 0.027912], ["two", 0.9123], ...]
+    if (end_of_utterance && req_ && !req_->phrase_id.empty()) {
+      KALDI_LOG << "Getting ref-text confidences...";
+      if (ref_texts_->find(req_->phrase_id) != ref_texts_->end()) {
+        const std::vector<int32> &one_best = ref_texts_->at(req_->phrase_id);
+
+        int32 max_states = 1000 + 10 * clat.NumStates();
+        CompactLattice clat_ali;
+        WordAlignLattice(clat, *trans_model_, *word_boundary_info_,
+                         max_states, &clat_ali);
+
+        MinimumBayesRiskOptions mbr_opts;
+        mbr_opts.decode_mbr = false;
+        MinimumBayesRisk mbr(clat_ali, one_best, mbr_opts);
+        const std::vector<BaseFloat> &conf = mbr.GetOneBestConfidences();
+        std::ostringstream ss;
+        ss << "[ ";
+        for (size_t i = 0; i < conf.size(); i++) {
+          std::string s = wordsyms->Find(one_best[i]);
+          ss << "[\"" << s << "\", " << conf[i] << "]";
+          if (i < conf.size() - 1)
+            ss << ", ";
+        }
+        ss << " ]";
+        result->back().ref_conf = ss.str();
+        // KALDI_LOG << "ref-conf: " << ss.str();
+
+      } else {
+        KALDI_LOG << "Eror: no ref text was found for phrase-id: "
+                  << req_->phrase_id;
+      }
+    }
 
 	return resultsNumber;
 }
