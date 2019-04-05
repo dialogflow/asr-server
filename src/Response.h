@@ -18,6 +18,9 @@
 
 #include <string>
 #include <vector>
+#include "json.hpp"
+
+using json = nlohmann::json;
 
 namespace apiai {
 
@@ -54,7 +57,10 @@ public:
 	 * Value of interrupted flag is set to true if recognition process was interrupted before
 	 * all given data been read.
 	 */
-	virtual void SetResult(std::vector<RecognitionResult> &data, const std::string &interrupted, int timeMarkMs) = 0;
+  virtual void SetResult(std::vector<RecognitionResult> &data, const json &decode_info,
+                                     const std::string &interrupted, int timeMarkMs) = 0;
+  virtual void SendJson(std::string json, bool final) = 0;
+  //virtual void SetResult(std::vector<RecognitionResult> &data, const std::string &interrupted, int timeMarkMs) = 0;
 	/** Set intermediate result */
 	virtual void SetIntermediateResult(RecognitionResult &decodedData, int timeMarkMs) = 0;
 	/** Set error value */

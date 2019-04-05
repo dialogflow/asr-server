@@ -27,21 +27,29 @@ void ResponseJsonWriter::SendJson(std::string json, bool final) {
 
 void ResponseJsonWriter::Write(std::ostringstream &outss, RecognitionResult &data) {
   outss << "{"
-  	<< "\"confidence\":" << data.confidence << ","
-  	<< "\"text\":\"" << data.text << "\""
-  	<< "}";
+        << "\"confidence\":" << data.confidence << ",";
+  if (data.text.empty())
+    outss << "\"text\":\"\"";
+  else
+    outss << "\"text\":" << data.text;
+
+  	outss << "}";
 }
 
 void ResponseJsonWriter::SetResult(std::vector<RecognitionResult> &data, int timeMarkMs) {
-	SetResult(data, NOT_INTERRUPTED, timeMarkMs);
+  SetResult(data, json(), NOT_INTERRUPTED, timeMarkMs);
 }
 
-void ResponseJsonWriter::SetResult(std::vector<RecognitionResult> &data, const std::string &interrupted, int timeMarkMs) {
+void ResponseJsonWriter::SetResult(std::vector<RecognitionResult> &data, const json &decode_info,
+                                   const std::string &interrupted, int timeMarkMs) {
 
 	std::ostringstream msg;
 	msg << "{";
 	msg << "\"status\":\"ok\"";
-	msg << ",\"ref-conf\":" << data[0].ref_conf;
+	if (data[0].ref_conf.empty())
+      msg << ",\"ref-conf\":\"\"";
+    else
+      msg << ",\"ref-conf\":" << data[0].ref_conf;
 	msg << ",\"data\":[";
 	for (int i = 0; i < data.size(); i++) {
 		if (i) {
@@ -56,6 +64,7 @@ void ResponseJsonWriter::SetResult(std::vector<RecognitionResult> &data, const s
 		    msg << ",\"time\":" << timeMarkMs;
 		}
 	}
+    msg << ",\"decode-info\":" << decode_info.dump();
 	msg << "}";
 	SendJson(msg.str(), true);
 }

@@ -28,6 +28,9 @@
 #include "lat/sausages.h"
 #include "lat/kaldi-lattice.h"
 #include "lat/word-align-lattice.h"
+#include "json.hpp"
+
+using json = nlohmann::json;
 
 using namespace kaldi;
 namespace apiai {
@@ -112,12 +115,13 @@ protected:
 	bool do_endpointing_;
 
 	std::string fst_rxfilename_;
+	std::string nnet3_rxfilename_;
 private:
   fst::SymbolTable *word_syms_;  // will be used for the graphs in decode_graphs_ (i.e. when phrase id provided)
   fst::SymbolTable *default_word_syms_;  // will be used for decode_fst_ (i.e. when no phrase id given)
 
 	kaldi::int32 Decode(bool end_of_utterance, int bestCount, std::vector<DecodedData> *result);
-
+  json GetTranscription(bool end_of_utterance, int bestCount);
 	void GetRecognitionResult(DecodedData &input, RecognitionResult *output);
 	void GetRecognitionResult(std::vector<DecodedData> &input, std::vector<RecognitionResult> *output);
 };

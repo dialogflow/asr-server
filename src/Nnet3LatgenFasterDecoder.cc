@@ -134,6 +134,7 @@ bool Nnet3LatgenFasterDecoder::Initialize(kaldi::OptionsItf &po) {
                   << word_syms_rxfilename_;
 
     acoustic_scale_ = decodable_opts_.acoustic_scale;
+    KALDI_LOG << "acoustic-scale is: " << acoustic_scale_;
 
     return true;
 }

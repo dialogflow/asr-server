@@ -39,7 +39,6 @@ protected:
 	virtual void GetLattice(kaldi::CompactLattice *clat, bool end_of_utterance);
 	virtual void CleanUp();
 private:
-	std::string nnet3_rxfilename_;
     bool online_;
     kaldi::OnlineEndpointConfig endpoint_config_;
 

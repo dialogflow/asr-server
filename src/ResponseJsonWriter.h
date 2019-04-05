@@ -17,7 +17,10 @@
 #define RESPONSEJSONWRITER_H_
 
 #include "Response.h"
+#include "json.hpp"
 #include <sstream>
+
+using json = nlohmann::json;
 
 namespace apiai {
 
@@ -32,13 +35,14 @@ public:
 	virtual const std::string &GetContentType() { return MIME_APPLICATION_JAVA; }
 
 	virtual void SetResult(std::vector<RecognitionResult> &data, int timeMarkMs);
-	virtual void SetResult(std::vector<RecognitionResult> &data, const std::string &interrupted, int timeMarkMs);
+  virtual void SetResult(std::vector<RecognitionResult> &data, const json &decode_info,
+                                     const std::string &interrupted, int timeMarkMs);
 	virtual void SetIntermediateResult(RecognitionResult &decodedData, int timeMarkMs);
 	virtual void SetError(const std::string &message);
+	virtual void SendJson(std::string json, bool final);
 protected:
 	std::ostream *out() { return out_; }
 
-	virtual void SendJson(std::string json, bool final);
 private:
 	void Write(std::ostringstream &outss, RecognitionResult &data);
 	std::ostream *out_;

@@ -48,6 +48,8 @@ public:
 		intermediateMillisecondsInterval_ = 0;
 		doEndpointing_ = false;
         phrase_id = "";
+        conf_default = 0.0;
+        conf_threshold = -std::numeric_limits<float>::infinity();
 	}
 
 	virtual ~RequestRawReader() {
